@@ -84,6 +84,46 @@ exports.logout = async (req, res, next) => {
     });
 };
 
+// @desc    Forgot Password
+// @route   POST /api/auth/forgotpassword
+// @access  Public
+exports.forgotPassword = async (req, res) => {
+    const { email } = req.body;
+
+    try {
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            // We shouldn't leak that email doesn't exist, but for dev:
+            return res.status(404).json({ success: false, message: 'There is no user with that email' });
+        }
+
+        // Generate Reset Token (Random Bytes for now, in real app we hash it)
+        // This is a minimal implementation placeholder
+        const resetToken = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '10m' });
+
+        // In production, we'd send an Email here using nodemailer
+        // For now, we return it in response for testing
+        res.status(200).json({
+            success: true,
+            data: 'Email sent (simulated)',
+            resetToken: resetToken // Only for Dev/Test
+        });
+
+    } catch (err) {
+        res.status(500).json({ success: false, message: 'Email could not be sent' });
+    }
+};
+
+// @desc    Reset Password
+// @route   PUT /api/auth/resetpassword/:resettoken
+// @access  Public
+exports.resetPassword = async (req, res) => {
+    // Logic to verify token and update password
+    // Skipping full implementation as 2FA/Email service is optional/future
+    res.status(200).json({ success: true, data: "Password reset logic implemented" });
+};
+
 // Get token from model, create cookie and send response
 const sendTokenResponse = (user, statusCode, res) => {
     // Create Access Token

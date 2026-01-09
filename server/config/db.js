@@ -10,15 +10,29 @@ const connectDB = async () => {
             await mongoose.connect(uri, { serverSelectionTimeoutMS: 2000 });
             console.log(`MongoDB Connected: ${mongoose.connection.host}`);
         } catch (err) {
-            console.log('Could not connect to configured MongoDB. Attempting to start embedded MongoDB...');
-            console.log('Authentication: Database will be reset on every restart.');
+            console.log('Could not connect to configured MongoDB. Switching to internal Persistent Database...');
 
-            // Fallback to In-Memory MongoDB
-            const mongod = await MongoMemoryServer.create();
+            // Fallback to Persistent Embedded MongoDB
+            const path = require('path');
+            const fs = require('fs');
+
+            const dbPath = path.join(__dirname, '..', 'data', 'db');
+            if (!fs.existsSync(dbPath)) {
+                fs.mkdirSync(dbPath, { recursive: true });
+            }
+
+            console.log(`Starting internal database at: ${dbPath}`);
+
+            const mongod = await MongoMemoryServer.create({
+                instance: {
+                    dbPath: dbPath,
+                    storageEngine: 'wiredTiger'
+                }
+            });
             uri = mongod.getUri();
 
             await mongoose.connect(uri);
-            console.log(`Embedded MongoDB Connected: ${uri}`);
+            console.log(`Internal Database Connected: ${uri}`);
         }
 
     } catch (error) {

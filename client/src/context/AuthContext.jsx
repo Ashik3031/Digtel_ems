@@ -18,13 +18,24 @@ export const AuthProvider = ({ children }) => {
     // Check if user is logged in
     const checkLoggedIn = async () => {
         try {
-            // Need a purely verify endpoint or just rely on handling 401s in an interceptor
-            // For now, let's try to get 'me' which relies on the cookie
+            const token = localStorage.getItem('token');
+            if (token) {
+                axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+            }
+
+            // Only fetch me if we have a token (or if we expected cookie-based auth, but middleware requires Bearer)
+            if (!token) {
+                setLoading(false);
+                return;
+            }
+
             const { data } = await axios.get('/api/auth/me');
             if (data.success) {
                 setUser(data.data);
             }
         } catch (err) {
+            localStorage.removeItem('token');
+            delete axios.defaults.headers.common['Authorization'];
             setUser(null);
         } finally {
             setLoading(false);
@@ -42,9 +53,12 @@ export const AuthProvider = ({ children }) => {
             const { data } = await axios.post('/api/auth/login', { email, password });
             if (data.success) {
                 setUser(data.user);
-                // Token is in cookie, but if we also got it in body (optional), we can use it.
-                // We relied on cookies in backend.
-                return data.user; // Return user object instead of true
+
+                // Save Token
+                localStorage.setItem('token', data.token);
+                axios.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
+
+                return data.user;
             }
         } catch (err) {
             setError(err.response?.data?.message || 'Login failed');
@@ -55,7 +69,12 @@ export const AuthProvider = ({ children }) => {
     // Logout Function
     const logout = async () => {
         try {
+            // Optional: call backend to clear cookie (refreshToken)
             await axios.get('/api/auth/logout');
+
+            // Clear Frontend State
+            localStorage.removeItem('token');
+            delete axios.defaults.headers.common['Authorization'];
             setUser(null);
         } catch (err) {
             console.error(err);

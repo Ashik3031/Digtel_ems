@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
+import SalesDashboard from './pages/sales/SalesDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
@@ -22,11 +23,11 @@ function App() {
       </Route>
 
       <Route element={<ProtectedRoute allowedRoles={['Sales Manager']} />}>
-        <Route path="/sales-manager" element={<Dashboard title="Sales Management" />} />
+        <Route path="/sales-manager" element={<SalesDashboard />} />
       </Route>
 
       <Route element={<ProtectedRoute allowedRoles={['Sales Executive']} />}>
-        <Route path="/sales-executive" element={<Dashboard title="Sales Workspace" />} />
+        <Route path="/sales-executive" element={<SalesDashboard />} />
       </Route>
 
       <Route element={<ProtectedRoute allowedRoles={['Backend Manager']} />}>
