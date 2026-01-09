@@ -1,5 +1,5 @@
 const express = require('express');
-const { createProspect, getSales, convertToSale, pushToBackend } = require('../controllers/salesController');
+const { createProspect, getSales, convertToSale, pushToBackend, revertToProspect } = require('../controllers/salesController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
 const router = express.Router();
@@ -14,5 +14,7 @@ router.route('/')
 // Actions
 router.put('/:id/convert', authorize('Sales Executive', 'Sales Manager', 'Super Admin'), convertToSale);
 router.put('/:id/push', authorize('Sales Executive', 'Sales Manager', 'Super Admin'), pushToBackend);
+router.put('/:id/revert', authorize('Sales Executive', 'Sales Manager', 'Super Admin'), revertToProspect);
+router.put('/:id/checklist', authorize('Sales Executive', 'Sales Manager', 'Super Admin'), require('../controllers/salesController').updateChecklistProgress);
 
 module.exports = router;

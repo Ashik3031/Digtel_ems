@@ -85,7 +85,6 @@ exports.pushToBackend = async (req, res) => {
         const { checklist } = req.body;
 
         if (!checklist || !checklist.whatsappGroupCreated || !checklist.emailSentToAccounts || !checklist.emailSentToBackend || !checklist.emailSentForPaymentConfirmation) {
-            // For backward compatibility, "emailSent" might be deprecated or mapped
             return res.status(400).json({ success: false, message: 'Incomplete checklist. All emails and WhatsApp group must be confirmed.' });
         }
 
@@ -116,7 +115,6 @@ exports.pushToBackend = async (req, res) => {
             clientName: sale.clientName,
             companyName: sale.companyName,
             checklist: {
-                // Initialize checklist dates if implied by previous steps, otherwise empty
                 meetingScheduled: { done: false },
                 meetingMinutesSent: { done: false },
                 contentCalendarSent: { done: false },
@@ -145,6 +143,62 @@ exports.pushToBackend = async (req, res) => {
             targetResource: `Sale: ${sale.clientName}`,
             details: { saleId: sale._id, projectId: project._id }
         });
+
+        res.status(200).json({ success: true, data: sale });
+    } catch (err) {
+        res.status(400).json({ success: false, message: err.message });
+    }
+};
+
+// @desc    Revert Active Sale to Prospect
+// @route   PUT /api/sales/:id/revert
+// @access  Private (Sales Only)
+exports.revertToProspect = async (req, res) => {
+    try {
+        let sale = await Sale.findById(req.params.id);
+
+        if (!sale) {
+            return res.status(404).json({ success: false, message: 'Sale not found' });
+        }
+
+        if (sale.status !== 'Sale') {
+            return res.status(400).json({ success: false, message: 'Only active sales can be reverted' });
+        }
+
+        if (sale.isLocked) {
+            return res.status(403).json({ success: false, message: 'Cannot revert a locked/handover record' });
+        }
+
+        sale.status = 'Prospect';
+        await sale.save();
+
+        await AuditLog.create({
+            action: 'REVERT_TO_PROSPECT',
+            performedBy: req.user.id,
+            targetResource: `Sale: ${sale.clientName}`,
+            details: { saleId: sale._id }
+        });
+
+        res.status(200).json({ success: true, data: sale });
+    } catch (err) {
+        res.status(400).json({ success: false, message: err.message });
+    }
+};
+
+// @desc    Update Checklist Progress (Save without Push)
+// @route   PUT /api/sales/:id/checklist
+// @access  Private (Sales Only)
+exports.updateChecklistProgress = async (req, res) => {
+    try {
+        const { checklist } = req.body;
+
+        let sale = await Sale.findById(req.params.id);
+        if (!sale) return res.status(404).json({ success: false, message: 'Sale not found' });
+
+        if (sale.isLocked) return res.status(403).json({ success: false, message: 'Record is locked' });
+
+        sale.checklist = checklist;
+        await sale.save();
 
         res.status(200).json({ success: true, data: sale });
     } catch (err) {

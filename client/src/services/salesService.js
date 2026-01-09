@@ -25,3 +25,15 @@ export const pushToBackend = async (id, checklistData) => {
     const response = await axios.put(`${API_URL}/${id}/push`, { checklist: checklistData });
     return response.data;
 };
+
+// Revert to Prospect
+export const revertToProspect = async (id) => {
+    const response = await axios.put(`${API_URL}/${id}/revert`);
+    return response.data;
+};
+
+// Update Checklist Progress
+export const updateChecklist = async (id, checklistData) => {
+    const response = await axios.put(`${API_URL}/${id}/checklist`, { checklist: checklistData });
+    return response.data;
+};

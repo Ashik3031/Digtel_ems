@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import { createProspect, getSales, convertToSale, pushToBackend } from '../../services/salesService';
+import Swal from 'sweetalert2';
+import { createProspect, getSales, convertToSale, pushToBackend, revertToProspect } from '../../services/salesService';
 import PaymentModal from '../../components/sales/PaymentModal';
 import PushModal from '../../components/sales/PushModal';
 import SaleDetailModal from '../../components/sales/SaleDetailModal';
@@ -20,7 +21,6 @@ const SalesDashboard = () => {
         navigate('/login');
     };
 
-    // New Prospect State
     // New Prospect State
     const [newProspect, setNewProspect] = useState({ clientName: '', clientPhone: '', companyName: '', price: '', notes: '', requirements: '' });
 
@@ -44,8 +44,9 @@ const SalesDashboard = () => {
             setShowCreate(false);
             setNewProspect({ clientName: '', clientPhone: '', companyName: '', price: '', notes: '', requirements: '' });
             fetchSales();
+            Swal.fire('Success', 'Prospect created successfully', 'success');
         } catch (err) {
-            alert('Failed to create prospect');
+            Swal.fire('Error', 'Failed to create prospect', 'error');
         }
     };
 
@@ -66,13 +67,38 @@ const SalesDashboard = () => {
         setModalType('detail');
     };
 
+    const handleRevert = async (sale, e) => {
+        e.stopPropagation();
+
+        const result = await Swal.fire({
+            title: 'Revert to Prospect?',
+            text: `Are you sure you want to revert "${sale.clientName}"?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#3085d6',
+            cancelButtonColor: '#d33',
+            confirmButtonText: 'Yes, revert it!'
+        });
+
+        if (result.isConfirmed) {
+            try {
+                await revertToProspect(sale._id);
+                fetchSales();
+                Swal.fire('Reverted!', 'Sale has been reverted to prospect.', 'success');
+            } catch (err) {
+                Swal.fire('Error', 'Revert failed', 'error');
+            }
+        }
+    };
+
     const handlePaymentSubmit = async (paymentData) => {
         try {
             await convertToSale(selectedSale._id, paymentData);
             setModalType(null);
             fetchSales();
+            Swal.fire('Converted!', 'Prospect converted to Sale.', 'success');
         } catch (err) {
-            alert(err.response?.data?.message || 'Conversion failed');
+            Swal.fire('Error', err.response?.data?.message || 'Conversion failed', 'error');
         }
     };
 
@@ -81,20 +107,16 @@ const SalesDashboard = () => {
             await pushToBackend(selectedSale._id, checklistData);
             setModalType(null);
             fetchSales();
+            Swal.fire('Pushed!', 'Project has been pushed to Account Manager.', 'success');
         } catch (err) {
-            alert(err.response?.data?.message || 'Push failed');
+            Swal.fire('Error', err.response?.data?.message || 'Push failed', 'error');
         }
     };
 
-    // Status Badge Helper
-    const getStatusColor = (status) => {
-        switch (status) {
-            case 'Prospect': return 'bg-blue-100 text-blue-800';
-            case 'Sale': return 'bg-green-100 text-green-800';
-            case 'Handover': return 'bg-purple-100 text-purple-800';
-            case 'Completed': return 'bg-gray-100 text-gray-800';
-            default: return 'bg-gray-100 text-gray-800';
-        }
+    // Close Handler to refresh data when modal closes (in case of save & exit)
+    const handleCloseModal = () => {
+        setModalType(null);
+        fetchSales(); // Refresh to get latest checklist state
     };
 
     return (
@@ -197,7 +219,7 @@ const SalesDashboard = () => {
                             <div
                                 key={sale._id}
                                 onClick={() => openDetailModal(sale)}
-                                className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 border-l-4 border-l-green-500 cursor-pointer"
+                                className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 border-l-4 border-l-green-500 cursor-pointer group"
                             >
                                 <div className="flex justify-between items-start mb-2">
                                     <h4 className="font-bold text-gray-800">{sale.clientName}</h4>
@@ -214,7 +236,14 @@ const SalesDashboard = () => {
                                 )}
 
                                 <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-50">
-                                    <span className="text-xs text-gray-400">{sale.payment?.paymentType}</span>
+                                    <button
+                                        onClick={(e) => handleRevert(sale, e)}
+                                        className="text-xs text-gray-400 hover:text-red-500 hover:bg-red-50 p-1 rounded transition-colors"
+                                        title="Revert to Prospect"
+                                    >
+                                        ↺ Revert
+                                    </button>
+
                                     <button
                                         onClick={(e) => openPushModal(sale, e)}
                                         className="text-sm bg-purple-50 text-purple-600 px-3 py-1.5 rounded-lg hover:bg-purple-100 font-medium"
@@ -226,7 +255,7 @@ const SalesDashboard = () => {
                         ))}
                     </div>
 
-                    {/* Handover / Hstory Column */}
+                    {/* Handover / History Column */}
                     <div className="space-y-4">
                         <div className="flex items-center justify-between p-2 bg-purple-50 rounded-lg">
                             <h3 className="font-semibold text-purple-800">Handed Over</h3>
@@ -258,20 +287,21 @@ const SalesDashboard = () => {
                 {/* Action Modals */}
                 {modalType === 'payment' && (
                     <PaymentModal
-                        onClose={() => setModalType(null)}
+                        onClose={handleCloseModal}
                         onSubmit={handlePaymentSubmit}
                     />
                 )}
                 {modalType === 'push' && (
                     <PushModal
-                        onClose={() => setModalType(null)}
+                        sale={selectedSale}
+                        onClose={handleCloseModal}
                         onSubmit={handlePushSubmit}
                     />
                 )}
                 {modalType === 'detail' && (
                     <SaleDetailModal
                         sale={selectedSale}
-                        onClose={() => setModalType(null)}
+                        onClose={handleCloseModal}
                     />
                 )}
 
