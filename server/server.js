@@ -123,6 +123,7 @@ app.use(cors(corsOptions));
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/sales', require('./routes/salesRoutes'));
+app.use('/api/projects', require('./routes/projectRoutes'));
 
 // Basic route
 app.get('/', (req, res) => {
@@ -139,8 +140,31 @@ app.use((err, req, res, next) => {
     });
 });
 
+const http = require('http');
+const { Server } = require('socket.io');
+
+const server = http.createServer(app);
+const io = new Server(server, {
+    cors: {
+        origin: allowedOrigins,
+        methods: ["GET", "POST", "PUT", "DELETE"],
+        credentials: true
+    }
+});
+
+// Make io accessible to our router
+app.set('io', io);
+
+io.on('connection', (socket) => {
+    console.log(`Socket connected: ${socket.id}`);
+
+    socket.on('disconnect', () => {
+        console.log('Socket disconnected');
+    });
+});
+
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
     console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
 });

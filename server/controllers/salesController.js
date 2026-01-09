@@ -109,12 +109,41 @@ exports.pushToBackend = async (req, res) => {
 
         await sale.save();
 
+        // --- NEW: Module 06 - Create Project for Account Manager ---
+        const Project = require('../models/Project');
+        const project = await Project.create({
+            saleId: sale._id,
+            clientName: sale.clientName,
+            companyName: sale.companyName,
+            checklist: {
+                // Initialize checklist dates if implied by previous steps, otherwise empty
+                meetingScheduled: { done: false },
+                meetingMinutesSent: { done: false },
+                contentCalendarSent: { done: false },
+                clientApprovalReceived: { done: false },
+                workStarted: { done: false },
+                socialMediaLinks: { done: false },
+                spreadsheetLinkAdded: { done: false },
+                qcRequestsCreated: { done: false },
+                redoLoopsCompleted: { done: false },
+                allWorkCompleted: { done: false },
+                monthlyReviewSent: { done: false }
+            }
+        });
+
+        // Real-time notification to AM Dashboard
+        const io = req.app.get('io');
+        if (io) {
+            io.emit('new_project', project);
+        }
+        // -----------------------------------------------------------
+
         // Log the push
         await AuditLog.create({
             action: 'PUSH_TO_BACKEND',
             performedBy: req.user.id,
             targetResource: `Sale: ${sale.clientName}`,
-            details: { saleId: sale._id }
+            details: { saleId: sale._id, projectId: project._id }
         });
 
         res.status(200).json({ success: true, data: sale });
