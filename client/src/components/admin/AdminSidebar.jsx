@@ -7,7 +7,8 @@ import {
     MdTrendingUp,
     MdTrackChanges,
     MdHistory,
-    MdRequestQuote
+    MdRequestQuote,
+    MdAssignment
 } from 'react-icons/md';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -23,6 +24,7 @@ const AdminSidebar = () => {
 
     const menuItems = [
         { name: 'Dashboard', icon: <MdDashboard />, path: '/admin' },
+        { name: 'Active Projects', icon: <MdAssignment />, path: '/admin/projects' },
         { name: 'Sales Analytics', icon: <MdBarChart />, path: '/admin/analytics' },
         { name: 'Performance Overview', icon: <MdTrendingUp />, path: '/admin/performance' },
         { name: 'Target Management', icon: <MdTrackChanges />, path: '/admin/targets' },

@@ -13,6 +13,7 @@ import SalesAnalytics from './pages/admin/SalesAnalytics';
 import PerformanceOverview from './pages/admin/PerformanceOverview';
 import TargetManagement from './pages/admin/TargetManagement';
 import AgentPerformanceDetail from './pages/admin/AgentPerformanceDetail';
+import ActiveProjects from './pages/admin/ActiveProjects';
 
 function App() {
   return (
@@ -39,6 +40,7 @@ function App() {
           <Route path="targets" element={<TargetManagement />} />
           <Route path="users" element={<UserManagement />} />
           <Route path="logs" element={<AuditLogViewer />} />
+          <Route path="projects" element={<ActiveProjects />} />
           <Route path="sales-view" element={<SalesDashboard isEmbedded={true} />} />
         </Route>
 

@@ -5,6 +5,83 @@ const Project = require('../models/Project');
 const AuditLog = require('../models/AuditLog');
 const Target = require('../models/Target');
 
+// @desc    Get Active Projects with Full Details
+// @route   GET /api/admin/active-projects
+// @access  Private (Admin/Super Admin)
+exports.getActiveProjects = async (req, res) => {
+    try {
+        // Get projects that are Active or Paused (not completed)
+        const projects = await Project.find({ status: { $in: ['Active', 'Paused'] } })
+            .populate('saleId')
+            .sort({ createdAt: -1 });
+
+        // Format the response with all needed details
+        const formattedProjects = projects.map(project => {
+            const sale = project.saleId;
+
+            // Calculate checklist progress
+            const checklistItems = Object.values(project.checklist || {});
+            const completedItems = checklistItems.filter(item => item?.done === true).length;
+            const totalItems = checklistItems.length;
+            const progress = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
+
+            // Get QC stats
+            const pendingQC = project.qcRequests?.filter(qc => qc.status === 'Pending').length || 0;
+            const totalQC = project.qcRequests?.length || 0;
+
+            return {
+                _id: project._id,
+                clientName: project.clientName,
+                companyName: project.companyName,
+                status: project.status,
+                createdAt: project.createdAt,
+                updatedAt: project.updatedAt,
+                // Payment info from sale
+                payment: {
+                    totalAmount: sale?.payment?.amount || 0,
+                    collectedAmount: sale?.payment?.collectedAmount || 0,
+                    pendingAmount: sale?.payment?.pendingAmount || 0,
+                    paymentStatus: sale?.payment?.status || 'N/A',
+                    paymentType: sale?.payment?.paymentType || 'N/A'
+                },
+                // Checklist progress
+                progress: {
+                    percentage: progress,
+                    completed: completedItems,
+                    total: totalItems
+                },
+                checklist: project.checklist,
+                // QC info
+                qc: {
+                    pending: pendingQC,
+                    total: totalQC,
+                    requests: project.qcRequests || []
+                },
+                // Other details
+                socialLinks: project.socialLinks || [],
+                contentCalendarLink: project.contentCalendarLink,
+                timeline: project.timeline || [],
+                // Original sale details
+                saleDetails: {
+                    requirements: sale?.requirements,
+                    notes: sale?.notes,
+                    clientPhone: sale?.clientPhone,
+                    assignedTo: sale?.assignedTo,
+                    createdBy: sale?.createdBy
+                }
+            };
+        });
+
+        res.status(200).json({
+            success: true,
+            count: formattedProjects.length,
+            data: formattedProjects
+        });
+    } catch (err) {
+        res.status(400).json({ success: false, message: err.message });
+    }
+};
+
 // @desc    Get Master Dashboard Statistics
 // @route   GET /api/admin/stats
 // @access  Private (Admin/Super Admin)

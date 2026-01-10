@@ -6,7 +6,8 @@ const {
     getAgentStats,
     setTarget,
     getTargets,
-    getPerformanceOverview
+    getPerformanceOverview,
+    getActiveProjects
 } = require('../controllers/adminController');
 const { getUsers, createUser, updateUser, resetPassword } = require('../controllers/adminUserController');
 const { protect, authorize } = require('../middleware/authMiddleware');
@@ -30,6 +31,9 @@ router.route('/targets')
 
 // Performance Overview (Admin/Super Admin/Sales Manager)
 router.get('/performance-overview', authorize('Admin', 'Super Admin', 'Sales Manager'), getPerformanceOverview);
+
+// Active Projects (Admin/Super Admin)
+router.get('/active-projects', authorize('Admin', 'Super Admin'), getActiveProjects);
 
 // Audit Logs (Admin/Super Admin only)
 router.get('/audit-logs', authorize('Admin', 'Super Admin'), getAuditLogs);
