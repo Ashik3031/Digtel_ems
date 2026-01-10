@@ -4,6 +4,7 @@ const PaymentModal = ({ onClose, onSubmit }) => {
     const [amount, setAmount] = useState('');
     const [collected, setCollected] = useState('');
     const [type, setType] = useState('Partial');
+    const [paymentMethod, setPaymentMethod] = useState('Bank Transfer');
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -11,6 +12,7 @@ const PaymentModal = ({ onClose, onSubmit }) => {
             amount: Number(amount),
             collectedAmount: Number(collected),
             paymentType: type,
+            paymentMethod: paymentMethod,
             status: Number(collected) >= Number(amount) ? 'Received' : 'Pending'
         });
     };
@@ -49,6 +51,22 @@ const PaymentModal = ({ onClose, onSubmit }) => {
                         >
                             <option value="Partial">Partial</option>
                             <option value="Full">Full</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700">Payment Method</label>
+                        <select
+                            value={paymentMethod}
+                            onChange={(e) => setPaymentMethod(e.target.value)}
+                            className="input-field"
+                            required
+                        >
+                            <option value="Bank Transfer">Bank Transfer</option>
+                            <option value="Cash">Cash</option>
+                            <option value="Cheque">Cheque</option>
+                            <option value="UPI">UPI</option>
+                            <option value="Card">Card</option>
+                            <option value="Other">Other</option>
                         </select>
                     </div>
 

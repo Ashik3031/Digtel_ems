@@ -11,17 +11,11 @@ dotenv.config();
 
 // Connect to database
 connectDB().then(async () => {
-    // Run seeder logic inline below instead of external file
-    // to ensure consistency with in-memory DB lifecycle
-
-    // Auto-seed: Always successful for In-Memory DB usage
     try {
         const User = require('./models/User');
         const Role = require('./models/Role');
 
         console.log('Ensuring default data exists...');
-
-        // 1. Ensure Roles Exist
         const roleDefinitions = [
             { name: 'Super Admin', description: 'Full System Access' },
             { name: 'Admin', description: 'Operational Admin' },
@@ -37,28 +31,13 @@ connectDB().then(async () => {
 
         for (const r of roleDefinitions) {
             const roleExists = await Role.findOne({ name: r.name });
-            if (!roleExists) {
-                await Role.create(r);
-            }
+            if (!roleExists) await Role.create(r);
         }
 
-        // 2. Ensure Users Exist (Idempotent)
         const allUsers = [
-            // Standard Team
             { name: 'Super Admin', email: 'admin@ems.com', role: 'Super Admin' },
-            { name: 'Admin User', email: 'operations@ems.com', role: 'Admin' },
-            { name: 'HR Manager', email: 'hr@ems.com', role: 'HR' },
-            { name: 'Sales Mgr', email: 'sales_mgr@ems.com', role: 'Sales Manager' },
             { name: 'Sales Exec', email: 'sales_exec@ems.com', role: 'Sales Executive' },
-            { name: 'Backend Mgr', email: 'backend_mgr@ems.com', role: 'Backend Manager' },
-            { name: 'Acct Mgr', email: 'am@ems.com', role: 'Account Manager' },
-            { name: 'Dev Team', email: 'dev@ems.com', role: 'Backend Team Member' },
-            { name: 'QC Officer', email: 'qc@ems.com', role: 'QC' },
-            { name: 'Client User', email: 'client@ems.com', role: 'Client' },
-            // Additional Sales Team
-            { name: 'Alice Sales', email: 'sales3@ems.com', role: 'Sales Executive' },
-            { name: 'Bob Sales', email: 'sales4@ems.com', role: 'Sales Executive' },
-            { name: 'Charlie Sales', email: 'sales5@ems.com', role: 'Sales Executive' }
+            { name: 'Acct Mgr', email: 'am@ems.com', role: 'Account Manager' }
         ];
 
         for (const u of allUsers) {
@@ -70,7 +49,6 @@ connectDB().then(async () => {
                     password: 'password123',
                     role: u.role
                 });
-                console.log(`Created user: ${u.email}`);
             }
         }
         console.log('Seeding check complete.');
@@ -81,60 +59,61 @@ connectDB().then(async () => {
 
 const app = express();
 
-// Middleware
-app.use(express.json());
-app.use(cookieParser());
-app.use(helmet());
-app.use(morgan('dev')); // Logger
-
-// Rate Limiting
-const { rateLimit } = require('express-rate-limit');
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    limit: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
-    standardHeaders: 'draft-7',
-    legacyHeaders: false,
-});
-app.use(limiter);
-
-// CORS Configuration
+// 1. CORS FIRST (Before everything else)
 const allowedOrigins = [
     'http://localhost:5173',
     'http://localhost:5174',
-    process.env.CLIENT_URL
-].filter(Boolean);
+    'http://localhost:5175',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:5174',
+    'http://127.0.0.1:5175'
+];
 
-const corsOptions = {
-    origin: (origin, callback) => {
-        // Allow requests with no origin (like mobile apps or curl requests)
-        if (!origin) return callback(null, true);
-        if (allowedOrigins.indexOf(origin) !== -1 || origin.startsWith('http://localhost:')) {
+app.use(cors({
+    origin: function (origin, callback) {
+        if (!origin || allowedOrigins.indexOf(origin) !== -1 || origin.startsWith('http://localhost:')) {
             callback(null, true);
         } else {
             callback(new Error('Not allowed by CORS'));
         }
     },
-    credentials: true, // Allow cookies to be sent
-    optionsSuccessStatus: 200
-};
-app.use(cors(corsOptions));
+    credentials: true
+}));
+
+// 2. Logging
+app.use(morgan('dev'));
+
+// 3. Security Headers (Helmet can be strict, so we put it after CORS)
+app.use(helmet({
+    crossOriginResourcePolicy: false,
+}));
+
+// 4. Body Parser & Cookie Parser
+app.use(express.json());
+app.use(cookieParser());
+
+// 5. Rate Limiting
+const { rateLimit } = require('express-rate-limit');
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    limit: 500, // Increased for development
+    standardHeaders: 'draft-7',
+    legacyHeaders: false,
+});
+app.use(limiter);
 
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/sales', require('./routes/salesRoutes'));
 app.use('/api/projects', require('./routes/projectRoutes'));
+app.use('/api/admin', require('./routes/adminRoutes'));
 
-// Basic route
-app.get('/', (req, res) => {
-    res.send('API is running...');
-});
+app.get('/', (req, res) => res.send('API is running...'));
 
-// Error Handler Middleware placeholder
 app.use((err, req, res, next) => {
     const statusCode = res.statusCode ? res.statusCode : 500;
-    res.status(statusCode);
-    res.json({
+    res.status(statusCode).json({
         message: err.message,
         stack: process.env.NODE_ENV === 'production' ? null : err.stack,
     });
@@ -142,29 +121,21 @@ app.use((err, req, res, next) => {
 
 const http = require('http');
 const { Server } = require('socket.io');
-
 const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
-        origin: allowedOrigins,
-        methods: ["GET", "POST", "PUT", "DELETE"],
+        origin: (origin, callback) => {
+            callback(null, true); // Permissive for debug
+        },
         credentials: true
     }
 });
 
-// Make io accessible to our router
 app.set('io', io);
-
 io.on('connection', (socket) => {
     console.log(`Socket connected: ${socket.id}`);
-
-    socket.on('disconnect', () => {
-        console.log('Socket disconnected');
-    });
+    socket.on('disconnect', () => console.log('Socket disconnected'));
 });
 
 const PORT = process.env.PORT || 5000;
-
-server.listen(PORT, () => {
-    console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
-});
+server.listen(PORT, () => console.log(`Server running on port ${PORT}`));

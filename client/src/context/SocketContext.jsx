@@ -16,7 +16,7 @@ export const SocketProvider = ({ children }) => {
             // Use window.location.hostname to auto-adapt to localhost or network IP
             const socketUrl = process.env.NODE_ENV === 'production'
                 ? '/'
-                : 'http://localhost:5000';
+                : 'http://localhost:5005';
 
             const newSocket = io(socketUrl, {
                 withCredentials: true // Important for CORS/Cookies if needed

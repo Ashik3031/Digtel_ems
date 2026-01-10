@@ -43,7 +43,20 @@ const SaleSchema = new mongoose.Schema({
             type: String,
             enum: ['Pending', 'Received'],
             default: 'Pending'
-        }
+        },
+        paymentHistory: [{
+            amount: Number,
+            date: {
+                type: Date,
+                default: Date.now
+            },
+            method: String,
+            notes: String,
+            recordedBy: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'User'
+            }
+        }]
     },
     // Handover Checklist (Required for 'Push to Backend')
     checklist: {

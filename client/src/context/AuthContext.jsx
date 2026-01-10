@@ -12,18 +12,20 @@ export const AuthProvider = ({ children }) => {
     const [error, setError] = useState(null);
 
     // Configure axios defaults
-    axios.defaults.baseURL = 'http://localhost:5000';
+    axios.defaults.baseURL = 'http://localhost:5005';
     axios.defaults.withCredentials = true; // Important for cookies
 
     // Check if user is logged in
     const checkLoggedIn = async () => {
         try {
             const token = localStorage.getItem('token');
+            const savedUser = localStorage.getItem('user');
+
             if (token) {
                 axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+                if (savedUser) setUser(JSON.parse(savedUser));
             }
 
-            // Only fetch me if we have a token (or if we expected cookie-based auth, but middleware requires Bearer)
             if (!token) {
                 setLoading(false);
                 return;
@@ -31,10 +33,14 @@ export const AuthProvider = ({ children }) => {
 
             const { data } = await axios.get('/api/auth/me');
             if (data.success) {
-                setUser(data.data);
+                const userWithId = { ...data.data, _id: data.data._id || data.data.id };
+                setUser(userWithId);
+                localStorage.setItem('user', JSON.stringify(userWithId));
             }
         } catch (err) {
+            console.error('CheckLoggedIn Error:', err);
             localStorage.removeItem('token');
+            localStorage.removeItem('user');
             delete axios.defaults.headers.common['Authorization'];
             setUser(null);
         } finally {
@@ -50,18 +56,23 @@ export const AuthProvider = ({ children }) => {
     const login = async (email, password) => {
         setError(null);
         try {
-            const { data } = await axios.post('/api/auth/login', { email, password });
-            if (data.success) {
-                setUser(data.user);
+            const { data } = await axios.post('http://localhost:5005/api/auth/login', { email, password });
 
-                // Save Token
+            if (data.success) {
+                const userWithId = { ...data.user, _id: data.user.id };
+                setUser(userWithId);
+
+                // Save Token & User
                 localStorage.setItem('token', data.token);
+                localStorage.setItem('user', JSON.stringify(userWithId));
                 axios.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
 
-                return data.user;
+                return userWithId;
             }
         } catch (err) {
-            setError(err.response?.data?.message || 'Login failed');
+            const msg = err.response?.data?.message || 'Login failed';
+            console.error('Login error:', msg);
+            setError(msg);
             return false;
         }
     };
@@ -74,6 +85,7 @@ export const AuthProvider = ({ children }) => {
 
             // Clear Frontend State
             localStorage.removeItem('token');
+            localStorage.removeItem('user');
             delete axios.defaults.headers.common['Authorization'];
             setUser(null);
         } catch (err) {

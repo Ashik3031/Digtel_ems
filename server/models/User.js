@@ -48,6 +48,10 @@ const UserSchema = new mongoose.Schema({
         type: Boolean,
         default: true
     },
+    manager: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+    },
     resetPasswordToken: String,
     resetPasswordExpire: Date,
     lastLogin: Date

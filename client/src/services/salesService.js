@@ -8,9 +8,21 @@ export const createProspect = async (prospectData) => {
     return response.data;
 };
 
-// Get All Sales
-export const getSales = async () => {
-    const response = await axios.get(API_URL);
+// Get All Sales (with optional filters)
+export const getSales = async (params = {}) => {
+    const response = await axios.get(API_URL, { params });
+    return response.data;
+};
+
+// Update Sale/Prospect
+export const updateSale = async (id, saleData) => {
+    const response = await axios.put(`${API_URL}/${id}`, saleData);
+    return response.data;
+};
+
+// Add Payment (Installment)
+export const addPayment = async (id, paymentData) => {
+    const response = await axios.put(`${API_URL}/${id}/add-payment`, paymentData);
     return response.data;
 };
 
@@ -35,5 +47,10 @@ export const revertToProspect = async (id) => {
 // Update Checklist Progress
 export const updateChecklist = async (id, checklistData) => {
     const response = await axios.put(`${API_URL}/${id}/checklist`, { checklist: checklistData });
+    return response.data;
+};
+
+export const getTargetStats = async () => {
+    const response = await axios.get(`${API_URL}/target-stats`);
     return response.data;
 };

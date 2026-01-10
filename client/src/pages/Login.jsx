@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
 
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false);
     const { login, error } = useAuth();
     const navigate = useNavigate();
     const [isLoading, setIsLoading] = useState(false);
@@ -12,24 +14,24 @@ const Login = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsLoading(true);
-        const userData = await login(email, password);
-        if (userData) {
-            const rolePaths = {
-                'Super Admin': '/super-admin',
-                'Admin': '/admin',
-                'HR': '/hr',
-                'Sales Manager': '/sales-manager',
-                'Sales Executive': '/sales-executive',
-                'Backend Manager': '/backend-manager',
-                'Account Manager': '/account-manager',
-                'Backend Team Member': '/backend-team',
-                'QC': '/qc',
-                'Client': '/client-portal'
-            };
-            const targetPath = rolePaths[userData.role] || '/dashboard';
-            navigate(targetPath);
+        try {
+            const userData = await login(email, password);
+            if (userData) {
+                const rolePaths = {
+                    'Super Admin': '/admin',
+                    'Admin': '/admin',
+                    'Sales Manager': '/sales',
+                    'Sales Executive': '/sales',
+                    'Account Manager': '/account-manager'
+                };
+                const targetPath = rolePaths[userData.role] || '/dashboard';
+                navigate(targetPath);
+            }
+        } catch (err) {
+            // Error is handled in context
+        } finally {
+            setIsLoading(false);
         }
-        setIsLoading(false);
     };
 
     return (
@@ -62,14 +64,23 @@ const Login = () => {
 
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                        <input
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            className="input-field"
-                            placeholder="••••••••"
-                            required
-                        />
+                        <div className="relative">
+                            <input
+                                type={showPassword ? "text" : "password"}
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
+                                className="input-field pr-10"
+                                placeholder="••••••••"
+                                required
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowPassword(!showPassword)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                            >
+                                {showPassword ? <FiEyeOff size={20} /> : <FiEye size={20} />}
+                            </button>
+                        </div>
                         <div className="flex justify-end mt-1">
                             <a href="#" className="text-sm text-primary-600 hover:text-primary-700 font-medium">Forgot Password?</a>
                         </div>
