@@ -240,15 +240,15 @@ const SaleDetailModal = ({ sale, onClose, onUpdate }) => {
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 bg-green-50 p-4 rounded-lg border border-green-100">
                                 <div>
                                     <p className="text-xs text-gray-500">Total Amount</p>
-                                    <p className="font-bold text-green-700">₹{sale.payment.amount}</p>
+                                    <p className="font-bold text-green-700">AED {sale.payment.amount}</p>
                                 </div>
                                 <div>
                                     <p className="text-xs text-gray-500">Collected</p>
-                                    <p className="font-bold text-green-700">₹{sale.payment.collectedAmount}</p>
+                                    <p className="font-bold text-green-700">AED {sale.payment.collectedAmount}</p>
                                 </div>
                                 <div>
                                     <p className="text-xs text-gray-500">Pending</p>
-                                    <p className="font-bold text-red-600">₹{sale.payment.pendingAmount}</p>
+                                    <p className="font-bold text-red-600">AED {sale.payment.pendingAmount}</p>
                                 </div>
                                 <div>
                                     <p className="text-xs text-gray-500">Type</p>
@@ -274,7 +274,7 @@ const SaleDetailModal = ({ sale, onClose, onUpdate }) => {
                                                 {sale.payment.paymentHistory.map((payment, idx) => (
                                                     <tr key={idx} className="border-b hover:bg-gray-50">
                                                         <td className="p-2 text-gray-700">{new Date(payment.date).toLocaleDateString()}</td>
-                                                        <td className="p-2 font-bold text-green-600">₹{payment.amount}</td>
+                                                        <td className="p-2 font-bold text-green-600">AED {payment.amount}</td>
                                                         <td className="p-2 text-gray-600">{payment.method}</td>
                                                         <td className="p-2 text-gray-500 text-xs">{payment.notes || '-'}</td>
                                                     </tr>

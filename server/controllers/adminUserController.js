@@ -118,3 +118,38 @@ exports.resetPassword = async (req, res) => {
         res.status(400).json({ success: false, message: err.message });
     }
 };
+
+// @desc    Delete User
+// @route   DELETE /api/admin/users/:id
+// @access  Private (Admin/Super Admin)
+exports.deleteUser = async (req, res) => {
+    try {
+        // prevent self-deletion
+        if (String(req.user.id) === String(req.params.id)) {
+            return res.status(400).json({ success: false, message: 'You cannot delete your own account' });
+        }
+
+        // Load the user to validate existence and role
+        const user = await User.findById(req.params.id).lean();
+        if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+
+        // Disallow deleting Super Admin users to be safe
+        if (user.role === 'Super Admin') {
+            return res.status(403).json({ success: false, message: 'Deleting Super Admins is not allowed' });
+        }
+
+        // Perform deletion using model method (avoids document.remove issues)
+        const deleted = await User.findByIdAndDelete(req.params.id);
+
+        // Log action
+        await AuditLog.create({
+            action: 'USER_DELETED',
+            performedBy: req.user.id,
+            targetResource: `User: ${user.email}`
+        });
+
+        res.status(200).json({ success: true, message: 'User deleted', data: { id: req.params.id, deleted: !!deleted } });
+    } catch (err) {
+        res.status(400).json({ success: false, message: err.message });
+    }
+};

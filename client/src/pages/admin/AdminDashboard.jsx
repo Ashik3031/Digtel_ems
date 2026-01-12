@@ -262,7 +262,7 @@ const AdminDashboard = () => {
                                                         {notification.data.client}
                                                         {notification.data?.amount && (
                                                             <span className={`ml-2 font-bold ${style.text}`}>
-                                                                ₹{notification.data.amount?.toLocaleString()}
+                                                                AED {notification.data.amount?.toLocaleString()}
                                                             </span>
                                                         )}
                                                     </p>
@@ -326,11 +326,11 @@ const AdminDashboard = () => {
                     <div className="grid grid-cols-2 gap-8">
                         <div className="p-6 bg-emerald-50 rounded-2xl border border-emerald-100">
                             <p className="text-xs font-bold text-emerald-600 uppercase tracking-widest">Total Collected</p>
-                            <p className="text-4xl font-black text-emerald-800 mt-2">₹{stats.payments.totalCollected.toLocaleString()}</p>
+                            <p className="text-4xl font-black text-emerald-800 mt-2">AED {stats.payments.totalCollected.toLocaleString()}</p>
                         </div>
                         <div className="p-6 bg-red-50 rounded-2xl border border-red-100">
                             <p className="text-xs font-bold text-red-600 uppercase tracking-widest">Total Pending</p>
-                            <p className="text-4xl font-black text-red-800 mt-2">₹{stats.payments.totalPending.toLocaleString()}</p>
+                            <p className="text-4xl font-black text-red-800 mt-2">AED {stats.payments.totalPending.toLocaleString()}</p>
                         </div>
                     </div>
                 </div>

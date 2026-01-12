@@ -95,7 +95,13 @@ const TargetManagement = () => {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {agents.map(agent => {
-                    const target = targets.find(t => t.user._id === agent._id);
+                    const target = targets.find(t => {
+                        if (!t) return false;
+                        // t.user can be a populated object or an ID string; guard against nulls
+                        const uid = t.user && (t.user._id ? t.user._id : t.user);
+                        return String(uid) === String(agent._id);
+                    });
+                    const displayAmount = target && typeof target.targetAmount === 'number' ? target.targetAmount.toLocaleString() : '0';
                     return (
                         <div key={agent._id} className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm hover:border-indigo-200 transition-all group">
                             <div className="flex items-start justify-between mb-4">
@@ -121,7 +127,7 @@ const TargetManagement = () => {
                                     <div>
                                         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Monthly Target</p>
                                         <div className="text-2xl font-black text-slate-800">
-                                            ${target ? target.targetAmount.toLocaleString() : '0'}
+                                            AED {displayAmount}
                                         </div>
                                     </div>
                                     <div className={`px-3 py-1 rounded-full text-[10px] font-bold ${target ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-400'}`}>

@@ -25,7 +25,7 @@ const PaymentCollectionModal = ({ sale, onClose, onPaymentAdded }) => {
         }
 
         if (amount > sale.payment.pendingAmount) {
-            Swal.fire('Amount Exceeds Pending', `Payment amount cannot exceed pending amount of ₹${sale.payment.pendingAmount}`, 'error');
+            Swal.fire('Amount Exceeds Pending', `Payment amount cannot exceed pending amount of AED ${sale.payment.pendingAmount}`, 'error');
             return;
         }
 
@@ -62,15 +62,15 @@ const PaymentCollectionModal = ({ sale, onClose, onPaymentAdded }) => {
                     <div className="grid grid-cols-3 gap-4 text-center">
                         <div>
                             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Total</p>
-                            <p className="text-lg font-black text-gray-800">₹{sale.payment.amount}</p>
+                            <p className="text-lg font-black text-gray-800">AED {sale.payment.amount}</p>
                         </div>
                         <div>
                             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Collected</p>
-                            <p className="text-lg font-black text-green-600">₹{sale.payment.collectedAmount}</p>
+                            <p className="text-lg font-black text-green-600">AED {sale.payment.collectedAmount}</p>
                         </div>
                         <div>
                             <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Pending</p>
-                            <p className="text-lg font-black text-red-600">₹{sale.payment.pendingAmount}</p>
+                            <p className="text-lg font-black text-red-600">AED {sale.payment.pendingAmount}</p>
                         </div>
                     </div>
                 </div>
@@ -89,7 +89,7 @@ const PaymentCollectionModal = ({ sale, onClose, onPaymentAdded }) => {
                             max={sale.payment.pendingAmount}
                             step="0.01"
                         />
-                        <p className="text-xs text-gray-400 mt-1">Maximum: ₹{sale.payment.pendingAmount}</p>
+                        <p className="text-xs text-gray-400 mt-1">Maximum: AED {sale.payment.pendingAmount}</p>
                     </div>
 
                     <div>

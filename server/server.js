@@ -11,6 +11,13 @@ dotenv.config();
 
 // Connect to database
 connectDB().then(async () => {
+    // By default, automatic seeding is disabled to avoid overwriting existing data.
+    // Set AUTO_SEED=true in your environment to enable role/user creation on startup.
+    if (process.env.AUTO_SEED !== 'true') {
+        console.log('Auto-seed disabled (set AUTO_SEED=true to enable)');
+        return;
+    }
+
     try {
         const User = require('./models/User');
         const Role = require('./models/Role');

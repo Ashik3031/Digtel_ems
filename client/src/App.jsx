@@ -8,6 +8,8 @@ import AdminDashboard from './pages/admin/AdminDashboard';
 import UserManagement from './pages/admin/UserManagement';
 import AuditLogViewer from './pages/admin/AuditLogViewer';
 import AdminLayout from './layouts/AdminLayout';
+// import AMDashboard from './pages/am/AMDashboard'; // New Import
+import QCDashboard from './pages/qc/QCDashboard';
 import ProtectedRoute from './components/ProtectedRoute';
 import SalesAnalytics from './pages/admin/SalesAnalytics';
 import PerformanceOverview from './pages/admin/PerformanceOverview';
@@ -49,10 +51,37 @@ function App() {
           <Route path="/dashboard" element={<Dashboard />} />
         </Route>
 
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="*" element={<Navigate to="/login" replace />} />
-      </Routes>
-    </SocketProvider>
+          <Route element={<ProtectedRoute allowedRoles={['Sales Executive']} />}>
+            <Route path="/sales-executive" element={<SalesDashboard />} />
+          </Route>
+
+          <Route element={<ProtectedRoute allowedRoles={['Backend Manager']} />}>
+            <Route path="/backend-manager" element={<Dashboard title="Engineering Lead" />} />
+          </Route>
+
+          <Route element={<ProtectedRoute allowedRoles={['Backend Team Member']} />}>
+            <Route path="/backend-team" element={<Dashboard title="Developer Console" />} />
+          </Route>
+
+          {/* New AM Route */}
+          <Route element={<ProtectedRoute allowedRoles={['Account Manager', 'Admin', 'Super Admin']} />}>
+            <Route path="/account-manager" element={<AMDashboard />} />
+          </Route>
+
+          <Route element={<ProtectedRoute allowedRoles={['QC', 'Admin', 'Super Admin']} />}>
+            <Route path="/qc" element={<QCDashboard />} />
+          </Route>
+
+          <Route element={<ProtectedRoute allowedRoles={['Client']} />}>
+            <Route path="/client-portal" element={<Dashboard title="Client Portal" />} />
+          </Route>
+
+          {/* Fallback */}
+          <Route path="/dashboard" element={<Dashboard title="General Dashboard" />} />
+          <Route path="/" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </SocketProvider>
+    // </AuthProvider>
   );
 }
 

@@ -84,16 +84,17 @@ const ActiveProjects = () => {
         return 'bg-red-500';
     };
 
+    // Match Account Manager's visible checklist keys and labels
+    const visibleChecklistKeys = ['meetingScheduled','meetingMinutesSent','contentCalendarSent','clientApprovalReceived','workStarted','socialMediaLinks','qcRequestsCreated','allWorkCompleted','monthlyReviewSent'];
+
     const checklistLabels = {
         meetingScheduled: 'Meeting Scheduled',
         meetingMinutesSent: 'Meeting Minutes Sent',
-        contentCalendarSent: 'Content Calendar Sent',
+        contentCalendarSent: 'Content + Calendar Sent',
         clientApprovalReceived: 'Client Approval Received',
         workStarted: 'Work Started',
-        socialMediaLinks: 'Social Media Links',
-        spreadsheetLinkAdded: 'Spreadsheet Link Added',
-        qcRequestsCreated: 'QC Requests Created',
-        redoLoopsCompleted: 'Redo Loops Completed',
+        socialMediaLinks: 'Social Media Links Created/Added',
+        qcRequestsCreated: 'Work in Progress',
         allWorkCompleted: 'All Work Completed',
         monthlyReviewSent: 'Monthly Review Sent'
     };
@@ -147,11 +148,11 @@ const ActiveProjects = () => {
                 </div>
                 <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
                     <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Total Collected</p>
-                    <p className="text-3xl font-black text-blue-600 mt-1">₹{projects.reduce((sum, p) => sum + (p.payment?.collectedAmount || 0), 0).toLocaleString()}</p>
+                    <p className="text-3xl font-black text-blue-600 mt-1">AED {projects.reduce((sum, p) => sum + (p.payment?.collectedAmount || 0), 0).toLocaleString()}</p>
                 </div>
                 <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm">
                     <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Pending Payments</p>
-                    <p className="text-3xl font-black text-red-600 mt-1">₹{projects.reduce((sum, p) => sum + (p.payment?.pendingAmount || 0), 0).toLocaleString()}</p>
+                    <p className="text-3xl font-black text-red-600 mt-1">AED {projects.reduce((sum, p) => sum + (p.payment?.pendingAmount || 0), 0).toLocaleString()}</p>
                 </div>
             </div>
 
@@ -197,11 +198,11 @@ const ActiveProjects = () => {
                                         <div className="flex items-center gap-6">
                                             <div className="text-right hidden md:block">
                                                 <p className="text-xs text-slate-400 font-bold uppercase">Collected</p>
-                                                <p className="text-lg font-black text-emerald-600">₹{project.payment?.collectedAmount?.toLocaleString() || 0}</p>
+                                                <p className="text-lg font-black text-emerald-600">AED {project.payment?.collectedAmount?.toLocaleString() || 0}</p>
                                             </div>
                                             <div className="text-right hidden md:block">
                                                 <p className="text-xs text-slate-400 font-bold uppercase">Pending</p>
-                                                <p className="text-lg font-black text-red-600">₹{project.payment?.pendingAmount?.toLocaleString() || 0}</p>
+                                                <p className="text-lg font-black text-red-600">AED {project.payment?.pendingAmount?.toLocaleString() || 0}</p>
                                             </div>
                                             <div className="relative w-16 h-16">
                                                 <svg className="w-full h-full transform -rotate-90">
@@ -262,28 +263,51 @@ const ActiveProjects = () => {
                                                     <MdCheckCircle className="text-blue-500" /> Project Checklist
                                                 </h4>
                                                 <div className="grid grid-cols-2 gap-2">
-                                                    {Object.entries(project.checklist || {}).map(([key, value]) => (
-                                                        <div
-                                                            key={key}
-                                                            className={`p-3 rounded-xl flex items-center gap-3 ${value?.done
-                                                                    ? 'bg-emerald-50 border border-emerald-100'
-                                                                    : 'bg-white border border-slate-100'
-                                                                }`}
-                                                        >
-                                                            <div className={`w-5 h-5 rounded-full flex items-center justify-center ${value?.done ? 'bg-emerald-500 text-white' : 'bg-slate-200'
-                                                                }`}>
-                                                                {value?.done && <MdCheckCircle className="text-xs" />}
+                                                    {visibleChecklistKeys.map((key) => {
+                                                        const value = project.checklist ? project.checklist[key] : null;
+                                                        return (
+                                                            <div
+                                                                key={key}
+                                                                className={`p-3 rounded-xl flex items-center gap-3 ${value?.done
+                                                                        ? 'bg-emerald-50 border border-emerald-100'
+                                                                        : 'bg-white border border-slate-100'
+                                                                    }`}
+                                                            >
+                                                                <div className={`w-5 h-5 rounded-full flex items-center justify-center ${value?.done ? 'bg-emerald-500 text-white' : 'bg-slate-200'
+                                                                    }`}>
+                                                                    {value?.done && <MdCheckCircle className="text-xs" />}
+                                                                </div>
+                                                                <div className="flex-1">
+                                                                    <p className={`text-sm font-medium ${value?.done ? 'text-emerald-700' : 'text-slate-600'}`}>
+                                                                        {checklistLabels[key] || key}
+                                                                    </p>
+                                                                    {value?.date && (
+                                                                        <p className="text-[10px] text-slate-400">{formatDate(value.date)}</p>
+                                                                    )}
+
+                                                                    {/* Inline assets from AM modal */}
+                                                                    {key === 'contentCalendarSent' && project.contentCalendarLink && (
+                                                                        <div className="mt-2 text-xs">
+                                                                            <a href={project.contentCalendarLink} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline flex items-center gap-2">
+                                                                                <MdDescription className="text-sm" />
+                                                                                Content Calendar
+                                                                            </a>
+                                                                        </div>
+                                                                    )}
+
+                                                                    {key === 'socialMediaLinks' && project.socialLinks && project.socialLinks.length > 0 && (
+                                                                        <div className="mt-2 text-xs flex flex-wrap gap-2">
+                                                                            {project.socialLinks.map((s, idx) => (
+                                                                                <a key={idx} href={s.url} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline flex items-center gap-1 text-xs">
+                                                                                    <MdLink className="text-sm" /> {s.platform}
+                                                                                </a>
+                                                                            ))}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
                                                             </div>
-                                                            <div className="flex-1">
-                                                                <p className={`text-sm font-medium ${value?.done ? 'text-emerald-700' : 'text-slate-600'}`}>
-                                                                    {checklistLabels[key] || key}
-                                                                </p>
-                                                                {value?.date && (
-                                                                    <p className="text-[10px] text-slate-400">{formatDate(value.date)}</p>
-                                                                )}
-                                                            </div>
-                                                        </div>
-                                                    ))}
+                                                        );
+                                                    })}
                                                 </div>
                                             </div>
 
@@ -297,15 +321,15 @@ const ActiveProjects = () => {
                                                     <div className="space-y-2 text-sm">
                                                         <div className="flex justify-between">
                                                             <span className="text-slate-500">Total Amount</span>
-                                                            <span className="font-bold">₹{project.payment?.totalAmount?.toLocaleString() || 0}</span>
+                                                            <span className="font-bold">AED {project.payment?.totalAmount?.toLocaleString() || 0}</span>
                                                         </div>
                                                         <div className="flex justify-between">
                                                             <span className="text-slate-500">Collected</span>
-                                                            <span className="font-bold text-emerald-600">₹{project.payment?.collectedAmount?.toLocaleString() || 0}</span>
+                                                            <span className="font-bold text-emerald-600">AED {project.payment?.collectedAmount?.toLocaleString() || 0}</span>
                                                         </div>
                                                         <div className="flex justify-between">
                                                             <span className="text-slate-500">Pending</span>
-                                                            <span className="font-bold text-red-600">₹{project.payment?.pendingAmount?.toLocaleString() || 0}</span>
+                                                            <span className="font-bold text-red-600">AED {project.payment?.pendingAmount?.toLocaleString() || 0}</span>
                                                         </div>
                                                         <div className="flex justify-between pt-2 border-t border-slate-100">
                                                             <span className="text-slate-500">Status</span>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
+import { useAuth } from '../../context/AuthContext';
 import {
     MdPersonAdd,
     MdEdit,
@@ -11,6 +12,7 @@ import {
 } from 'react-icons/md';
 
 const UserManagement = () => {
+    const { user: currentUser } = useAuth();
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
@@ -106,6 +108,39 @@ const UserManagement = () => {
         }
     };
 
+    const handleDeleteUser = async (userToDelete) => {
+        // prevent accidental self-delete from client side
+        if (currentUser && String(currentUser._id) === String(userToDelete._id)) {
+            Swal.fire('Forbidden', 'You cannot delete your own account', 'error');
+            return;
+        }
+
+        // prevent deleting Super Admins from UI
+        if (userToDelete.role === 'Super Admin') {
+            Swal.fire('Forbidden', 'Deleting Super Admin users is not allowed', 'error');
+            return;
+        }
+
+        const res = await Swal.fire({
+            title: `Delete ${userToDelete.name}?`,
+            text: 'This action cannot be undone. All user-related access will be removed.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Delete',
+            confirmButtonColor: '#d33'
+        });
+
+        if (!res.isConfirmed) return;
+
+        try {
+            await axios.delete(`/api/admin/users/${userToDelete._id}`);
+            Swal.fire('Deleted', 'User deleted successfully', 'success');
+            fetchUsers();
+        } catch (err) {
+            Swal.fire('Error', err.response?.data?.message || 'Failed to delete user', 'error');
+        }
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
@@ -170,6 +205,9 @@ const UserManagement = () => {
                                         </button>
                                         <button onClick={() => handleResetPassword(user)} className="p-2 hover:bg-orange-50 text-orange-600 rounded-lg transition-colors" title="Reset Password">
                                             <MdLockReset className="text-xl" />
+                                        </button>
+                                        <button disabled={currentUser && String(currentUser._id) === String(user._id) || user.role === 'Super Admin'} onClick={() => handleDeleteUser(user)} className="p-2 hover:bg-red-50 text-red-600 rounded-lg transition-colors" title="Delete">
+                                            <MdDelete className="text-xl" />
                                         </button>
                                     </div>
                                 </td>

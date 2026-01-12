@@ -9,7 +9,7 @@ const {
     getPerformanceOverview,
     getActiveProjects
 } = require('../controllers/adminController');
-const { getUsers, createUser, updateUser, resetPassword } = require('../controllers/adminUserController');
+const { getUsers, createUser, updateUser, resetPassword, deleteUser } = require('../controllers/adminUserController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
 const router = express.Router();
@@ -44,7 +44,8 @@ router.route('/users')
     .post(createUser);
 
 router.route('/users/:id')
-    .put(updateUser);
+    .put(updateUser)
+    .delete(authorize('Admin', 'Super Admin'), deleteUser);
 
 router.put('/users/:id/reset-password', resetPassword);
 

@@ -12,7 +12,7 @@ const ProjectSchema = new mongoose.Schema({
 
     status: {
         type: String,
-        enum: ['Active', 'Paused', 'Completed'],
+        enum: ['Active', 'Paused', 'Completed', 'Renewal'],
         default: 'Active'
     },
 
@@ -77,11 +77,13 @@ const ProjectSchema = new mongoose.Schema({
         details: String, // e.g. "1 reel completed"
         status: {
             type: String,
-            enum: ['Pending', 'Approved', 'Redo'],
+            enum: ['Pending', 'Approved', 'Redo', 'Rejected'],
             default: 'Pending'
         },
         feedback: String, // For Redo loops
-        resolvedDate: Date
+        resolvedDate: Date,
+        // user who created or resubmitted this QC request
+        createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
     }],
 
     timeline: [{

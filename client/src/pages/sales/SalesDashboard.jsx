@@ -367,7 +367,7 @@ const SalesDashboard = ({ isEmbedded = false }) => {
                                             <h4 className="font-black text-gray-800 group-hover:text-green-600 transition-colors">{sale.clientName}</h4>
                                             <div className="text-center">
                                                 <div className="text-[8px] font-black text-gray-400 uppercase tracking-widest mb-0.5">COLLECTED</div>
-                                                <div className="text-sm font-black text-green-600">₹{sale.payment?.collectedAmount}</div>
+                                                <div className="text-sm font-black text-green-600">AED {sale.payment?.collectedAmount}</div>
                                             </div>
                                         </div>
                                         <div className="w-full bg-gray-100 rounded-full h-1.5 mb-4">
@@ -438,7 +438,7 @@ const SalesDashboard = ({ isEmbedded = false }) => {
                                 <input placeholder="Business Name" className="input-field h-14 bg-gray-50 border-transparent focus:bg-white font-bold" value={newProspect.companyName} onChange={e => setNewProspect({ ...newProspect, companyName: e.target.value })} />
                             </div>
                             <div className="col-span-2 space-y-1">
-                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">VALUE ESTIMATION (₹)</label>
+                                <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest ml-1">VALUE ESTIMATION (AED )</label>
                                 <input placeholder="Target Amount" type="number" className="input-field h-14 bg-gray-50 border-transparent focus:bg-white font-bold text-xl text-blue-600" value={newProspect.price} onChange={e => setNewProspect({ ...newProspect, price: e.target.value })} />
                             </div>
                             <textarea placeholder="Specific Requirements *" required className="col-span-1 input-field h-32 bg-gray-50 border-transparent focus:bg-white resize-none font-medium p-4" value={newProspect.requirements} onChange={e => setNewProspect({ ...newProspect, requirements: e.target.value })} />

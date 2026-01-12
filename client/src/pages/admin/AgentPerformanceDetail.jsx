@@ -205,7 +205,7 @@ const AgentPerformanceDetail = () => {
                                         </span>
                                     </td>
                                     <td className="px-8 py-5">
-                                        <p className="font-black text-slate-700">₹{sale.payment?.amount || 0}</p>
+                                        <p className="font-black text-slate-700">AED {sale.payment?.amount || 0}</p>
                                     </td>
                                     <td className="px-8 py-5 text-right font-bold text-slate-400 text-xs">
                                         {new Date(sale.createdAt).toLocaleDateString()}
