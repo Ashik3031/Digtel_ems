@@ -22,7 +22,8 @@ const Login = () => {
                     'Admin': '/admin',
                     'Sales Manager': '/sales',
                     'Sales Executive': '/sales',
-                    'Account Manager': '/account-manager'
+                    'Account Manager': '/account-manager',
+                    'QC': '/qc'
                 };
                 const targetPath = rolePaths[userData.role] || '/dashboard';
                 navigate(targetPath);

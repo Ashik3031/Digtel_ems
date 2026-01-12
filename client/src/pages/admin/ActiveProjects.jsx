@@ -37,10 +37,12 @@ const ActiveProjects = () => {
 
         socket.on('new_project', handleProjectUpdate);
         socket.on('sale_handover', handleProjectUpdate);
+        socket.on('project_updated', handleProjectUpdate);
 
         return () => {
             socket.off('new_project', handleProjectUpdate);
             socket.off('sale_handover', handleProjectUpdate);
+            socket.off('project_updated', handleProjectUpdate);
         };
     }, [socket]);
 
@@ -85,7 +87,7 @@ const ActiveProjects = () => {
     };
 
     // Match Account Manager's visible checklist keys and labels
-    const visibleChecklistKeys = ['meetingScheduled','meetingMinutesSent','contentCalendarSent','clientApprovalReceived','workStarted','socialMediaLinks','qcRequestsCreated','allWorkCompleted','monthlyReviewSent'];
+    const visibleChecklistKeys = ['meetingScheduled', 'meetingMinutesSent', 'contentCalendarSent', 'clientApprovalReceived', 'workStarted', 'socialMediaLinks', 'qcRequestsCreated', 'allWorkCompleted', 'monthlyReviewSent'];
 
     const checklistLabels = {
         meetingScheduled: 'Meeting Scheduled',
@@ -125,8 +127,8 @@ const ActiveProjects = () => {
                                 key={f}
                                 onClick={() => setFilter(f)}
                                 className={`px-4 py-2 rounded-lg text-sm font-bold transition-all capitalize ${filter === f
-                                        ? 'bg-white text-slate-800 shadow-sm'
-                                        : 'text-slate-500 hover:text-slate-700'
+                                    ? 'bg-white text-slate-800 shadow-sm'
+                                    : 'text-slate-500 hover:text-slate-700'
                                     }`}
                             >
                                 {f} ({f === 'all' ? projects.length : projects.filter(p => p.status === f.charAt(0).toUpperCase() + f.slice(1)).length})
@@ -269,8 +271,8 @@ const ActiveProjects = () => {
                                                             <div
                                                                 key={key}
                                                                 className={`p-3 rounded-xl flex items-center gap-3 ${value?.done
-                                                                        ? 'bg-emerald-50 border border-emerald-100'
-                                                                        : 'bg-white border border-slate-100'
+                                                                    ? 'bg-emerald-50 border border-emerald-100'
+                                                                    : 'bg-white border border-slate-100'
                                                                     }`}
                                                             >
                                                                 <div className={`w-5 h-5 rounded-full flex items-center justify-center ${value?.done ? 'bg-emerald-500 text-white' : 'bg-slate-200'
@@ -397,8 +399,8 @@ const ActiveProjects = () => {
                                                                 <div key={i} className="flex items-center justify-between text-sm">
                                                                     <span className="text-slate-600 truncate flex-1">{qc.details || 'QC Request'}</span>
                                                                     <span className={`px-2 py-0.5 rounded text-xs font-bold ${qc.status === 'Approved' ? 'bg-emerald-100 text-emerald-600' :
-                                                                            qc.status === 'Pending' ? 'bg-amber-100 text-amber-600' :
-                                                                                'bg-red-100 text-red-600'
+                                                                        qc.status === 'Pending' ? 'bg-amber-100 text-amber-600' :
+                                                                            'bg-red-100 text-red-600'
                                                                         }`}>
                                                                         {qc.status}
                                                                     </span>

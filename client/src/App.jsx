@@ -46,41 +46,32 @@ function App() {
           <Route path="sales-view" element={<SalesDashboard isEmbedded={true} />} />
         </Route>
 
-        {/* Generic Dashboard or Redirect */}
+        {/* Standalone QC Route */}
+        <Route element={<ProtectedRoute allowedRoles={['QC', 'Admin', 'Super Admin']} />}>
+          <Route path="/qc" element={<QCDashboard />} />
+        </Route>
+
+        {/* Other Protect Routes */}
         <Route element={<ProtectedRoute allowedRoles={['Super Admin', 'Admin', 'HR', 'Sales Manager', 'Sales Executive', 'Backend Manager', 'Account Manager', 'Backend Team Member', 'QC', 'Client']} />}>
           <Route path="/dashboard" element={<Dashboard />} />
         </Route>
 
-          <Route element={<ProtectedRoute allowedRoles={['Sales Executive']} />}>
-            <Route path="/sales-executive" element={<SalesDashboard />} />
-          </Route>
+        <Route element={<ProtectedRoute allowedRoles={['Backend Manager']} />}>
+          <Route path="/backend-manager" element={<Dashboard title="Engineering Lead" />} />
+        </Route>
 
-          <Route element={<ProtectedRoute allowedRoles={['Backend Manager']} />}>
-            <Route path="/backend-manager" element={<Dashboard title="Engineering Lead" />} />
-          </Route>
+        <Route element={<ProtectedRoute allowedRoles={['Backend Team Member']} />}>
+          <Route path="/backend-team" element={<Dashboard title="Developer Console" />} />
+        </Route>
 
-          <Route element={<ProtectedRoute allowedRoles={['Backend Team Member']} />}>
-            <Route path="/backend-team" element={<Dashboard title="Developer Console" />} />
-          </Route>
+        <Route element={<ProtectedRoute allowedRoles={['Client']} />}>
+          <Route path="/client-portal" element={<Dashboard title="Client Portal" />} />
+        </Route>
 
-          {/* New AM Route */}
-          <Route element={<ProtectedRoute allowedRoles={['Account Manager', 'Admin', 'Super Admin']} />}>
-            <Route path="/account-manager" element={<AMDashboard />} />
-          </Route>
-
-          <Route element={<ProtectedRoute allowedRoles={['QC', 'Admin', 'Super Admin']} />}>
-            <Route path="/qc" element={<QCDashboard />} />
-          </Route>
-
-          <Route element={<ProtectedRoute allowedRoles={['Client']} />}>
-            <Route path="/client-portal" element={<Dashboard title="Client Portal" />} />
-          </Route>
-
-          {/* Fallback */}
-          <Route path="/dashboard" element={<Dashboard title="General Dashboard" />} />
-          <Route path="/" element={<Navigate to="/login" replace />} />
-        </Routes>
-      </SocketProvider>
+        {/* Fallback */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
+      </Routes>
+    </SocketProvider>
     // </AuthProvider>
   );
 }

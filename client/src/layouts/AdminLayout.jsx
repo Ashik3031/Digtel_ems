@@ -8,7 +8,7 @@ const AdminLayout = () => {
     if (loading) return null;
 
     // Strict Admin check
-    if (!user || !['Admin', 'Super Admin'].includes(user.role)) {
+    if (!user || !['Admin', 'Super Admin', 'Sales Manager'].includes(user.role)) {
         return <Navigate to="/dashboard" replace />;
     }
 

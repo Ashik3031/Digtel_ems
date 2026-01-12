@@ -40,27 +40,9 @@ connectDB().then(async () => {
             const roleExists = await Role.findOne({ name: r.name });
             if (!roleExists) await Role.create(r);
         }
-
-        const allUsers = [
-            { name: 'Super Admin', email: 'admin@ems.com', role: 'Super Admin' },
-            { name: 'Sales Exec', email: 'sales_exec@ems.com', role: 'Sales Executive' },
-            { name: 'Acct Mgr', email: 'am@ems.com', role: 'Account Manager' }
-        ];
-
-        for (const u of allUsers) {
-            const userExists = await User.findOne({ email: u.email });
-            if (!userExists) {
-                await User.create({
-                    name: u.name,
-                    email: u.email,
-                    password: 'password123',
-                    role: u.role
-                });
-            }
-        }
-        console.log('Seeding check complete.');
+        console.log('Role check complete.');
     } catch (error) {
-        console.error('Auto-seed failed:', error);
+        console.error('Basic setup failed:', error);
     }
 });
 

@@ -94,15 +94,36 @@ exports.getSales = async (req, res) => {
             const y = parseInt(year);
 
             if (week) {
-                // If week is provided, we calculate based on the month/year context
-                // Week 1, 2, 3, 4, 5
-                const m = parseInt(month) || 0;
+                const m = parseInt(month) || 0; // 0-indexed in JS Date
                 const w = parseInt(week);
 
-                // Get the first day of the month
-                startDate = new Date(y, m, (w - 1) * 7 + 1);
-                endDate = new Date(y, m, w * 7);
-                endDate.setHours(23, 59, 59, 999);
+                const firstDayOfMonth = new Date(y, m, 1);
+                const dayOfWeek = firstDayOfMonth.getDay(); // 0 (Sun) - 6 (Sat)
+
+                // Calculate the end date of the first week (first Sunday)
+                const daysToFirstSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
+                const firstSundayDate = new Date(y, m, 1 + daysToFirstSunday);
+                firstSundayDate.setHours(23, 59, 59, 999);
+
+                if (w === 1) {
+                    startDate = new Date(y, m, 1);
+                    endDate = new Date(firstSundayDate);
+                } else {
+                    const daysToAdd = (w - 2) * 7 + 1;
+                    startDate = new Date(firstSundayDate);
+                    startDate.setDate(startDate.getDate() + daysToAdd);
+                    startDate.setHours(0, 0, 0, 0);
+
+                    endDate = new Date(startDate);
+                    endDate.setDate(startDate.getDate() + 6);
+                    endDate.setHours(23, 59, 59, 999);
+                }
+
+                // Range Check: Ensure we don't exceed the month
+                const lastDayOfMonth = new Date(y, m + 1, 0, 23, 59, 59, 999);
+                if (endDate > lastDayOfMonth) {
+                    endDate = lastDayOfMonth;
+                }
             } else if (month) {
                 const m = parseInt(month);
                 startDate = new Date(y, m, 1);

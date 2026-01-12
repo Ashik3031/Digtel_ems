@@ -14,7 +14,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 const AdminSidebar = () => {
-    const { logout } = useAuth();
+    const { logout, user } = useAuth();
     const navigate = useNavigate();
 
     const handleLogout = async () => {
@@ -22,16 +22,18 @@ const AdminSidebar = () => {
         navigate('/login');
     };
 
-    const menuItems = [
-        { name: 'Dashboard', icon: <MdDashboard />, path: '/admin' },
-        { name: 'Active Projects', icon: <MdAssignment />, path: '/admin/projects' },
-        { name: 'Sales Analytics', icon: <MdBarChart />, path: '/admin/analytics' },
-        { name: 'Performance Overview', icon: <MdTrendingUp />, path: '/admin/performance' },
-        { name: 'Target Management', icon: <MdTrackChanges />, path: '/admin/targets' },
-        { name: 'Sales View', icon: <MdRequestQuote />, path: '/admin/sales-view' },
-        { name: 'User Management', icon: <MdPeople />, path: '/admin/users' },
-        { name: 'Audit Logs', icon: <MdHistory />, path: '/admin/logs' },
+    const allMenuItems = [
+        { name: 'Dashboard', icon: <MdDashboard />, path: '/admin', roles: ['Admin', 'Super Admin'] },
+        { name: 'Active Projects', icon: <MdAssignment />, path: '/admin/projects', roles: ['Admin', 'Super Admin'] },
+        { name: 'Sales Analytics', icon: <MdBarChart />, path: '/admin/analytics', roles: ['Admin', 'Super Admin'] },
+        { name: 'Performance Overview', icon: <MdTrendingUp />, path: '/admin/performance', roles: ['Admin', 'Super Admin', 'Sales Manager'] },
+        { name: 'Target Management', icon: <MdTrackChanges />, path: '/admin/targets', roles: ['Admin', 'Super Admin'] },
+        { name: 'Sales View', icon: <MdRequestQuote />, path: '/admin/sales-view', roles: ['Admin', 'Super Admin', 'Sales Manager'] },
+        { name: 'User Management', icon: <MdPeople />, path: '/admin/users', roles: ['Admin', 'Super Admin'] },
+        { name: 'Audit Logs', icon: <MdHistory />, path: '/admin/logs', roles: ['Admin', 'Super Admin'] },
     ];
+
+    const menuItems = allMenuItems.filter(item => item.roles.includes(user?.role));
 
     return (
         <div className="w-64 bg-slate-900 h-screen flex flex-col shrink-0 text-slate-300">

@@ -23,10 +23,26 @@ const SalesDashboard = ({ isEmbedded = false }) => {
     // Calculate Current Date context
     const getInitialFilters = () => {
         const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth();
+        const date = now.getDate();
+
+        const firstDayOfMonth = new Date(year, month, 1);
+        const dayOfWeek = firstDayOfMonth.getDay(); // 0(Sun) - 6(Sat)
+        const daysToFirstSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
+        const firstSundayDate = 1 + daysToFirstSunday;
+
+        let week = 1;
+        if (date > firstSundayDate) {
+            week = Math.ceil((date - firstSundayDate) / 7) + 1;
+        }
+
         return {
-            year: now.getFullYear(),
-            month: now.getMonth(), // 0-indexed
-            week: Math.ceil(now.getDate() / 7) // 1-5
+            year,
+            month,
+            week,
+            status: '',
+            search: ''
         };
     };
 

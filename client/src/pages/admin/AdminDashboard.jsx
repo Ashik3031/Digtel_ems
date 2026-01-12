@@ -115,6 +115,7 @@ const AdminDashboard = () => {
         socket.on('payment_added', handlePaymentAdded);
         socket.on('sale_handover', handleSaleHandover);
         socket.on('new_project', handleStatsUpdate);
+        socket.on('project_updated', handleStatsUpdate);
 
         return () => {
             socket.off('prospect_created', handleProspectCreated);
@@ -124,6 +125,7 @@ const AdminDashboard = () => {
             socket.off('payment_added', handlePaymentAdded);
             socket.off('sale_handover', handleSaleHandover);
             socket.off('new_project', handleStatsUpdate);
+            socket.off('project_updated', handleStatsUpdate);
         };
     }, [socket]);
 

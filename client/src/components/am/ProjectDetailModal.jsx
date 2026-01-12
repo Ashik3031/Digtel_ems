@@ -62,7 +62,7 @@ const ProjectDetailModal = ({ project, onClose }) => {
     ];
 
     // Keys used to compute completion for the AM UI (keeps parity with ProjectCard)
-    const visibleChecklistKeys = ['meetingScheduled','meetingMinutesSent','contentCalendarSent','clientApprovalReceived','workStarted','socialMediaLinks','qcRequestsCreated','allWorkCompleted','monthlyReviewSent'];
+    const visibleChecklistKeys = ['meetingScheduled', 'meetingMinutesSent', 'contentCalendarSent', 'clientApprovalReceived', 'workStarted', 'socialMediaLinks', 'qcRequestsCreated', 'allWorkCompleted', 'monthlyReviewSent'];
 
     const allVisibleDone = visibleChecklistKeys.every(key => project.checklist && project.checklist[key]?.done);
 
@@ -93,7 +93,7 @@ const ProjectDetailModal = ({ project, onClose }) => {
             setLoading(false);
             endSave();
         }
-    }; 
+    };
 
     // Helper function to check if all QC requests are approved
     const allQCApproved = project.qcRequests.length > 0 && project.qcRequests.every(qc => qc.status === 'Approved');
@@ -133,6 +133,16 @@ const ProjectDetailModal = ({ project, onClose }) => {
     // Edit mode toggles
     const [editingSocialLinks, setEditingSocialLinks] = useState(false);
     const [editingSpreadsheet, setEditingSpreadsheet] = useState(false);
+
+    // Sync local state when project prop changes (e.g. from socket update)
+    useEffect(() => {
+        if (!editingSocialLinks) {
+            setLocalSocialLinks(project.socialLinks || []);
+        }
+        if (!editingSpreadsheet) {
+            setLocalSpreadsheetLink(project.contentCalendarLink || '');
+        }
+    }, [project, editingSocialLinks, editingSpreadsheet]);
 
     const addLocalSocial = () => {
         if (!newUrl) return;
@@ -342,7 +352,7 @@ const ProjectDetailModal = ({ project, onClose }) => {
                                                         )}
                                                     </div>
                                                 </div>
-                                            )} 
+                                            )}
                                             {item.key === 'contentCalendarSent' && (
                                                 <div className="mt-2">
                                                     {editingSpreadsheet ? (
@@ -368,7 +378,7 @@ const ProjectDetailModal = ({ project, onClose }) => {
                         </div>
 
                         {/* Action: Completed / Renewal (show only when all steps are done) */}
-                        {allVisibleDone && !['completed','renewal'].includes((project.status || '').toLowerCase()) && (
+                        {allVisibleDone && !['completed', 'renewal'].includes((project.status || '').toLowerCase()) && (
                             <div className="mt-4 p-3 rounded-lg border bg-black text-white flex items-center justify-between">
                                 <div className="text-sm">All checklist steps are completed. Is the project over or does it need renewal?</div>
                                 <div className="flex gap-2">
