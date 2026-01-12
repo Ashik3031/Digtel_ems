@@ -16,7 +16,7 @@ const UserManagement = () => {
     const [showModal, setShowModal] = useState(false);
     const [editingUser, setEditingUser] = useState(null);
     const [formData, setFormData] = useState({
-        name: '', email: '', password: '', role: 'Client', manager: '', isActive: true
+        name: '', email: '', password: '', role: 'Client', isActive: true
     });
 
     const roles = [
@@ -53,7 +53,7 @@ const UserManagement = () => {
             }
             setShowModal(false);
             setEditingUser(null);
-            setFormData({ name: '', email: '', password: '', role: 'Client', manager: '', isActive: true });
+            setFormData({ name: '', email: '', password: '', role: 'Client', isActive: true });
             fetchUsers();
         } catch (err) {
             Swal.fire('Error', err.response?.data?.message || 'Operation failed', 'error');
@@ -66,7 +66,6 @@ const UserManagement = () => {
             name: user.name,
             email: user.email,
             role: user.role,
-            manager: user.manager?._id || user.manager || '',
             isActive: user.isActive
         });
         setShowModal(true);
@@ -117,7 +116,7 @@ const UserManagement = () => {
                 <button
                     onClick={() => {
                         setEditingUser(null);
-                        setFormData({ name: '', email: '', password: '', role: 'Sales Executive', manager: '', isActive: true });
+                        setFormData({ name: '', email: '', password: '', role: 'Sales Executive', isActive: true });
                         setShowModal(true);
                     }}
                     className="flex items-center gap-2 bg-blue-600 text-white px-6 py-3 rounded-2xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-200"
@@ -147,7 +146,7 @@ const UserManagement = () => {
                                 </td>
                                 <td className="px-6 py-4">
                                     <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase ${user.role.includes('Admin') ? 'bg-purple-100 text-purple-700' :
-                                            user.role.includes('Manage') ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'
+                                        user.role.includes('Manage') ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'
                                         }`}>
                                         {user.role}
                                     </span>
@@ -218,18 +217,6 @@ const UserManagement = () => {
                                         value={formData.role} onChange={e => setFormData({ ...formData, role: e.target.value })}
                                     >
                                         {roles.map(r => <option key={r} value={r}>{r}</option>)}
-                                    </select>
-                                </div>
-                                <div>
-                                    <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Reporting Manager</label>
-                                    <select
-                                        className="input-field bg-slate-50 border-transparent focus:bg-white font-bold h-12 text-slate-500"
-                                        value={formData.manager} onChange={e => setFormData({ ...formData, manager: e.target.value })}
-                                    >
-                                        <option value="">No Manager</option>
-                                        {users.filter(u => u.role.includes('Manager') || u.role.includes('Admin')).map(u => (
-                                            <option key={u._id} value={u._id}>{u.name} ({u.role})</option>
-                                        ))}
                                     </select>
                                 </div>
                             </div>

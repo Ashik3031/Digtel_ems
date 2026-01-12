@@ -19,7 +19,15 @@ exports.getUsers = async (req, res) => {
 // @access  Private (Admin/Super Admin)
 exports.createUser = async (req, res) => {
     try {
-        const { name, email, password, role, manager } = req.body;
+        let { name, email, password, role, manager } = req.body;
+
+        // If no manager is provided, default to a Super Admin
+        if (!manager) {
+            const superAdmin = await User.findOne({ role: 'Super Admin' });
+            if (superAdmin) {
+                manager = superAdmin._id;
+            }
+        }
 
         const user = await User.create({
             name,

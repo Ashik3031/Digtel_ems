@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
-    MdSearch,
-    MdFilterList,
+
     MdHistory,
     MdNavigateBefore,
     MdNavigateNext
@@ -60,7 +59,6 @@ const AuditLogViewer = () => {
                                 <th className="px-6 py-5 border-b border-slate-100">User</th>
                                 <th className="px-6 py-5 border-b border-slate-100">Action</th>
                                 <th className="px-6 py-5 border-b border-slate-100">Target Resource</th>
-                                <th className="px-6 py-5 border-b border-slate-100">Details</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-50 font-medium italic text-xs">
@@ -87,15 +85,6 @@ const AuditLogViewer = () => {
                                     </td>
                                     <td className="px-6 py-4 text-slate-600 not-italic">
                                         {log.targetResource || 'System'}
-                                    </td>
-                                    <td className="px-6 py-4">
-                                        <div className="max-w-xs truncate text-slate-400 group relative">
-                                            {JSON.stringify(log.details)}
-                                            {/* Tooltip for overflow (simplified) */}
-                                            <div className="hidden group-hover:block absolute z-10 bg-slate-800 text-white p-2 rounded text-[10px] w-64 break-words shadow-xl">
-                                                {JSON.stringify(log.details, null, 2)}
-                                            </div>
-                                        </div>
                                     </td>
                                 </tr>
                             ))}

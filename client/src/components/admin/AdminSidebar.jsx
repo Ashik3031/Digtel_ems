@@ -38,7 +38,7 @@ const AdminSidebar = () => {
             {/* Header */}
             <div className="p-6 border-b border-slate-800">
                 <h1 className="text-xl font-bold text-white flex items-center gap-2">
-                    <span className="text-blue-500">EMS</span> ADMIN
+                    <span className="text-blue-500">DIGTEL</span> ADMIN
                 </h1>
             </div>
 
