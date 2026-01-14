@@ -47,7 +47,7 @@ const AMDashboard = () => {
         qcPending: projects.filter(p => (p.qcRequests || []).some(q => q.status === 'Pending' || q.status === 'Redo')).length
     };
 
-   
+
 
     useEffect(() => {
         fetchProjects();
@@ -113,70 +113,70 @@ const AMDashboard = () => {
     const goToSection = (id) => {
         const el = document.getElementById(id);
         if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }; 
+    };
 
     return (
-        <div className="min-h-screen bg-gray-50 p-6">
+        <div className="min-h-screen bg-white dark:bg-black transition-colors duration-300 p-6">
             <div className="max-w-7xl mx-auto">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-800">Account Management</h1>
-                        <p className="text-gray-500">Welcome, <span className="font-semibold text-primary-600">{user?.name}</span></p>
+                        <h1 className="text-3xl font-bold text-black dark:text-white">Account Management</h1>
+                        <p className="text-zinc-500 dark:text-zinc-400">Welcome, <span className="font-semibold text-[#D8F60D]">{user?.name}</span></p>
                         <div className="mt-3 flex items-center gap-3 text-sm">
-                            <div className="px-3 py-1 bg-white border rounded text-xs">Total: <strong className="ml-1">{stats.total}</strong></div>
-                            <div className="px-3 py-1 bg-white border rounded text-xs">Active: <strong className="ml-1">{stats.active}</strong></div>
-                            <div className="px-3 py-1 bg-white border rounded text-xs">Paused: <strong className="ml-1">{stats.paused}</strong></div>
-                            <div className="px-3 py-1 bg-white border rounded text-xs">QC Pending: <strong className="ml-1">{stats.qcPending}</strong></div>
+                            <div className="px-3 py-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded text-xs text-zinc-600 dark:text-zinc-300">Total: <strong className="ml-1 text-black dark:text-white">{stats.total}</strong></div>
+                            <div className="px-3 py-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded text-xs text-zinc-600 dark:text-zinc-300">Active: <strong className="ml-1 text-black dark:text-white">{stats.active}</strong></div>
+                            <div className="px-3 py-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded text-xs text-zinc-600 dark:text-zinc-300">Paused: <strong className="ml-1 text-black dark:text-white">{stats.paused}</strong></div>
+                            <div className="px-3 py-1 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded text-xs text-zinc-600 dark:text-zinc-300">QC Pending: <strong className="ml-1 text-black dark:text-white">{stats.qcPending}</strong></div>
                         </div>
 
                         {/* Small Completed / Renewal preview panel near stats */}
                         <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <div className="bg-white rounded-lg border p-3 shadow-sm">
+                            <div className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 p-3 shadow-sm">
                                 <div className="flex items-center justify-between mb-1">
-                                    <div className="text-sm font-semibold text-gray-700">Completed</div>
-                                    <div className="text-xs text-gray-500">{completedProjects.length}</div>
+                                    <div className="text-sm font-semibold text-black dark:text-white">Completed</div>
+                                    <div className="text-xs text-zinc-500 dark:text-zinc-400">{completedProjects.length}</div>
                                 </div>
-                                <div className="text-xs text-gray-600 space-y-1">
-                                    {completedProjects.slice(0,2).map(p => (
-                                        <div key={p._id} className="truncate">{p.clientName} {p.companyName ? <span className="text-gray-400">• {p.companyName}</span> : null}</div>
+                                <div className="text-xs text-zinc-600 dark:text-zinc-500 space-y-1">
+                                    {completedProjects.slice(0, 2).map(p => (
+                                        <div key={p._id} className="truncate">{p.clientName} {p.companyName ? <span className="text-zinc-400">• {p.companyName}</span> : null}</div>
                                     ))}
-                                    {completedProjects.length === 0 && <div className="text-gray-400">No completed projects</div>}
+                                    {completedProjects.length === 0 && <div className="text-zinc-400">No completed projects</div>}
                                 </div>
                                 <div className="mt-2 text-right">
-                                    <button onClick={() => goToSection('completed-projects')} className="text-xs text-primary-600 underline">View all</button>
+                                    <button onClick={() => goToSection('completed-projects')} className="text-xs text-[#D8F60D] hover:underline">View all</button>
                                 </div>
                             </div>
 
-                            <div className="bg-white rounded-lg border p-3 shadow-sm">
+                            <div className="bg-white dark:bg-zinc-900 rounded-lg border border-zinc-200 dark:border-zinc-800 p-3 shadow-sm">
                                 <div className="flex items-center justify-between mb-1">
-                                    <div className="text-sm font-semibold text-gray-700">Renewal</div>
-                                    <div className="text-xs text-gray-500">{renewalProjects.length}</div>
+                                    <div className="text-sm font-semibold text-black dark:text-white">Renewal</div>
+                                    <div className="text-xs text-zinc-500 dark:text-zinc-400">{renewalProjects.length}</div>
                                 </div>
-                                <div className="text-xs text-gray-600 space-y-1">
-                                    {renewalProjects.slice(0,2).map(p => (
-                                        <div key={p._id} className="truncate">{p.clientName} {p.companyName ? <span className="text-gray-400">• {p.companyName}</span> : null}</div>
+                                <div className="text-xs text-zinc-600 dark:text-zinc-500 space-y-1">
+                                    {renewalProjects.slice(0, 2).map(p => (
+                                        <div key={p._id} className="truncate">{p.clientName} {p.companyName ? <span className="text-zinc-400">• {p.companyName}</span> : null}</div>
                                     ))}
-                                    {renewalProjects.length === 0 && <div className="text-gray-400">No renewal projects</div>}
+                                    {renewalProjects.length === 0 && <div className="text-zinc-400">No renewal projects</div>}
                                 </div>
                                 <div className="mt-2 text-right">
-                                    <button onClick={() => goToSection('renewal-projects')} className="text-xs text-primary-600 underline">View all</button>
+                                    <button onClick={() => goToSection('renewal-projects')} className="text-xs text-[#D8F60D] hover:underline">View all</button>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <div className="flex items-center gap-3 w-full md:w-auto">
-                        <div className="flex items-center bg-white border rounded px-2">
-                            <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search projects" className="px-2 py-1 w-48 text-sm" />
+                        <div className="flex items-center bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded px-2">
+                            <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search projects" className="px-2 py-1 w-48 text-sm bg-transparent border-none text-black dark:text-white focus:outline-none placeholder-zinc-400" />
                         </div>
 
                         <div className="flex items-center gap-2">
-                            <button onClick={() => setFilter('All')} className={`px-3 py-1 rounded ${filter === 'All' ? 'bg-primary-600 text-white' : 'bg-white border'}`}>All</button>
-                            <button onClick={() => setFilter('Active')} className={`px-3 py-1 rounded ${filter === 'Active' ? 'bg-primary-600 text-white' : 'bg-white border'}`}>Active</button>
-                            <button onClick={() => setFilter('Paused')} className={`px-3 py-1 rounded ${filter === 'Paused' ? 'bg-primary-600 text-white' : 'bg-white border'}`}>Paused</button>
+                            <button onClick={() => setFilter('All')} className={`px-3 py-1 rounded transition-colors ${filter === 'All' ? 'bg-[#D8F60D] text-black font-bold' : 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-300'}`}>All</button>
+                            <button onClick={() => setFilter('Active')} className={`px-3 py-1 rounded transition-colors ${filter === 'Active' ? 'bg-[#D8F60D] text-black font-bold' : 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-300'}`}>Active</button>
+                            <button onClick={() => setFilter('Paused')} className={`px-3 py-1 rounded transition-colors ${filter === 'Paused' ? 'bg-[#D8F60D] text-black font-bold' : 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-300'}`}>Paused</button>
                         </div>
 
-                        <button onClick={handleLogout} className="bg-white text-red-600 border border-red-200 px-4 py-2 rounded-lg hover:bg-red-50">
+                        <button onClick={handleLogout} className="bg-white dark:bg-black text-red-600 border border-red-200 dark:border-red-900/30 px-4 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors text-sm">
                             Logout
                         </button>
                     </div>
@@ -184,7 +184,7 @@ const AMDashboard = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredProjects.length === 0 && (
-                        <div className="col-span-1 md:col-span-2 lg:col-span-3 p-6 bg-white border rounded">No projects match your search or filter.</div>
+                        <div className="col-span-1 md:col-span-2 lg:col-span-3 p-6 bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 rounded text-zinc-500 dark:text-zinc-400">No projects match your search or filter.</div>
                     )}
                     {filteredProjects.map(project => (
                         <ProjectCard key={project._id} project={project} onClick={() => setSelectedProject(project)} />
@@ -194,13 +194,13 @@ const AMDashboard = () => {
                 {/* Full Completed projects section */}
                 {completedProjects.length > 0 && (
                     <div id="completed-projects" className="mt-8">
-                        <h2 className="text-xl font-semibold mb-3">Completed Projects</h2>
+                        <h2 className="text-xl font-semibold mb-3 text-black dark:text-white">Completed Projects</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {completedProjects.map(p => (
-                                <div key={p._id} className="relative">
+                                <div key={p._id} className="relative group">
                                     <ProjectCard project={p} onClick={() => setSelectedProject(p)} />
-                                    <div className="absolute top-2 right-2">
-                                        <button disabled={actionLoading === p._id} onClick={() => handleRestore(p._id)} className="bg-white border px-2 py-1 text-sm rounded">{actionLoading === p._id ? 'Restoring...' : 'Restore'}</button>
+                                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button disabled={actionLoading === p._id} onClick={() => handleRestore(p._id)} className="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 px-3 py-1 text-xs rounded shadow-sm text-black dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-700">{actionLoading === p._id ? 'Restoring...' : 'Restore'}</button>
                                     </div>
                                 </div>
                             ))}
@@ -211,13 +211,13 @@ const AMDashboard = () => {
                 {/* Full Renewal projects section */}
                 {renewalProjects.length > 0 && (
                     <div id="renewal-projects" className="mt-8">
-                        <h2 className="text-xl font-semibold mb-3">Renewal Projects</h2>
+                        <h2 className="text-xl font-semibold mb-3 text-black dark:text-white">Renewal Projects</h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {renewalProjects.map(p => (
-                                <div key={p._id} className="relative">
+                                <div key={p._id} className="relative group">
                                     <ProjectCard project={p} onClick={() => setSelectedProject(p)} />
-                                    <div className="absolute top-2 right-2">
-                                        <button disabled={actionLoading === p._id} onClick={() => handleRestore(p._id)} className="bg-white border px-2 py-1 text-sm rounded">{actionLoading === p._id ? 'Restoring...' : 'Restore'}</button>
+                                    <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                        <button disabled={actionLoading === p._id} onClick={() => handleRestore(p._id)} className="bg-white dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 px-3 py-1 text-xs rounded shadow-sm text-black dark:text-white hover:bg-zinc-50 dark:hover:bg-zinc-700">{actionLoading === p._id ? 'Restoring...' : 'Restore'}</button>
                                     </div>
                                 </div>
                             ))}

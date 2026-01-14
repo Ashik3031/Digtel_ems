@@ -90,6 +90,13 @@ const ProjectSchema = new mongoose.Schema({
         action: String,
         timestamp: { type: Date, default: Date.now },
         user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+    }],
+
+    // Remarks from Backend Manager (or others)
+    remarks: [{
+        text: String,
+        date: { type: Date, default: Date.now },
+        user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
     }]
 }, {
     timestamps: true

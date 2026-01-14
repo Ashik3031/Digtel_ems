@@ -33,7 +33,7 @@ router.route('/targets')
 router.get('/performance-overview', authorize('Admin', 'Super Admin', 'Sales Manager'), getPerformanceOverview);
 
 // Active Projects (Admin/Super Admin)
-router.get('/active-projects', authorize('Admin', 'Super Admin'), getActiveProjects);
+router.get('/active-projects', authorize('Admin', 'Super Admin', 'Backend Manager'), getActiveProjects);
 
 // Audit Logs (Admin/Super Admin only)
 router.get('/audit-logs', authorize('Admin', 'Super Admin'), getAuditLogs);

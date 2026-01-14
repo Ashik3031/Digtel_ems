@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import { SiInstagram, SiFacebook, SiWhatsapp, SiTiktok, SiLinkedin } from 'react-icons/si';
-import { FiLink, FiEye } from 'react-icons/fi';
+import { FiLink, FiEye, FiMessageSquare } from 'react-icons/fi';
 import { useAuth } from '../../context/AuthContext';
 
 const ProjectDetailModal = ({ project, onClose }) => {
@@ -498,37 +498,61 @@ const ProjectDetailModal = ({ project, onClose }) => {
                                 )}
                             </div>
                         </div>
+
+                        {/* Remarks Section */}
+                        <div>
+                            <h3 className="font-bold text-gray-800 mb-3 flex items-center gap-2">
+                                <FiMessageSquare /> Remarks & Updates
+                            </h3>
+                            <div className="bg-gray-50 rounded-xl border border-gray-200 p-4 max-h-60 overflow-y-auto space-y-3">
+                                {project.remarks && project.remarks.length > 0 ? (
+                                    project.remarks.slice().reverse().map((remark, idx) => (
+                                        <div key={idx} className="bg-white p-3 rounded-lg border border-gray-100 shadow-sm text-sm">
+                                            <p className="text-gray-700 whitespace-pre-wrap">{remark.text}</p>
+                                            <div className="flex justify-between items-center mt-2 text-xs text-gray-400">
+                                                <span className="font-medium text-gray-500">{remark.user?.name || 'Unknown User'}</span>
+                                                <span>{new Date(remark.date).toLocaleString('en-IN', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+                                            </div>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p className="text-sm text-gray-400 italic text-center py-4">No remarks added yet.</p>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            {qcModalOpen && qcToView && (
-                <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-60">
-                    <div className="bg-white rounded-lg max-w-2xl w-[90vw] p-6">
-                        <div className="flex justify-between items-start">
-                            <h3 className="text-lg font-bold break-words">{qcToView.details}</h3>
-                            <button onClick={closeQCModal} className="text-gray-500 hover:text-gray-700">Close</button>
-                        </div>
-                        <div className="mt-3 text-sm text-gray-700">
-                            <p><strong>Status:</strong> {qcToView.status}</p>
-                            <p className="mt-2"><strong>Requested:</strong> {qcToView.requestDate ? new Date(qcToView.requestDate).toLocaleString() : ''}</p>
-                            {qcToView.createdBy && qcToView.createdBy.name && (
-                                <p className="mt-1 text-sm text-gray-600">Requested by: <strong>{qcToView.createdBy.name}</strong> {qcToView.createdBy.role && <span className="text-xs text-gray-400">({qcToView.createdBy.role})</span>}</p>
-                            )}
-                            {qcToView.feedback && (
-                                <div className="mt-3">
-                                    <h4 className="font-semibold">Feedback</h4>
-                                    <p className="whitespace-pre-wrap text-sm text-red-600">{qcToView.feedback}</p>
-                                </div>
-                            )}
-                        </div>
-                        <div className="mt-4 text-right">
-                            <button onClick={closeQCModal} className="px-3 py-1 bg-gray-200 rounded mr-2">Close</button>
+            {
+                qcModalOpen && qcToView && (
+                    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-60">
+                        <div className="bg-white rounded-lg max-w-2xl w-[90vw] p-6">
+                            <div className="flex justify-between items-start">
+                                <h3 className="text-lg font-bold break-words">{qcToView.details}</h3>
+                                <button onClick={closeQCModal} className="text-gray-500 hover:text-gray-700">Close</button>
+                            </div>
+                            <div className="mt-3 text-sm text-gray-700">
+                                <p><strong>Status:</strong> {qcToView.status}</p>
+                                <p className="mt-2"><strong>Requested:</strong> {qcToView.requestDate ? new Date(qcToView.requestDate).toLocaleString() : ''}</p>
+                                {qcToView.createdBy && qcToView.createdBy.name && (
+                                    <p className="mt-1 text-sm text-gray-600">Requested by: <strong>{qcToView.createdBy.name}</strong> {qcToView.createdBy.role && <span className="text-xs text-gray-400">({qcToView.createdBy.role})</span>}</p>
+                                )}
+                                {qcToView.feedback && (
+                                    <div className="mt-3">
+                                        <h4 className="font-semibold">Feedback</h4>
+                                        <p className="whitespace-pre-wrap text-sm text-red-600">{qcToView.feedback}</p>
+                                    </div>
+                                )}
+                            </div>
+                            <div className="mt-4 text-right">
+                                <button onClick={closeQCModal} className="px-3 py-1 bg-gray-200 rounded mr-2">Close</button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 };
 

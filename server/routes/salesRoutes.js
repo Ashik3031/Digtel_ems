@@ -7,7 +7,8 @@ const {
     revertToProspect,
     getTargetStats,
     updateSale,
-    addPayment
+    addPayment,
+    markSaleNoted
 } = require('../controllers/salesController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
@@ -20,8 +21,11 @@ router.get('/target-stats', authorize('Sales Executive', 'Admin', 'Super Admin')
 
 // Get All / Create (Sales + Admins)
 router.route('/')
-    .get(authorize('Sales Executive', 'Sales Manager', 'Admin', 'Super Admin'), getSales)
+    .get(authorize('Sales Executive', 'Sales Manager', 'Admin', 'Super Admin', 'Backend Manager'), getSales)
     .post(authorize('Sales Executive', 'Sales Manager', 'Super Admin'), createProspect);
+
+// BM Actions
+router.put('/:id/note', authorize('Backend Manager', 'Super Admin'), markSaleNoted);
 
 // Actions
 router.put('/:id', authorize('Sales Executive', 'Sales Manager', 'Admin', 'Super Admin'), updateSale);

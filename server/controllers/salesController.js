@@ -138,7 +138,7 @@ exports.getSales = async (req, res) => {
         }
 
         // Role-based restriction
-        if (!['Super Admin', 'Admin', 'Sales Manager'].includes(req.user.role)) {
+        if (!['Super Admin', 'Admin', 'Sales Manager', 'Backend Manager'].includes(req.user.role)) {
             query.assignedTo = req.user.id;
         }
 
@@ -252,6 +252,9 @@ exports.addPayment = async (req, res) => {
             notes: notes || '',
             recordedBy: req.user.id
         });
+
+        // Reset BM Noted flag so it shows up in "Payment Updation"
+        sale.bmNoted = false;
 
         await sale.save();
 
@@ -522,6 +525,26 @@ exports.getTargetStats = async (req, res) => {
                 year
             }
         });
+    } catch (err) {
+        res.status(400).json({ success: false, message: err.message });
+    }
+};
+
+// @desc    Mark Sale as Noted by Backend Manager
+// @route   PUT /api/sales/:id/note
+// @access  Private (Backend Manager, Super Admin)
+exports.markSaleNoted = async (req, res) => {
+    try {
+        let sale = await Sale.findById(req.params.id);
+
+        if (!sale) {
+            return res.status(404).json({ success: false, message: 'Sale not found' });
+        }
+
+        sale.bmNoted = true;
+        await sale.save();
+
+        res.status(200).json({ success: true, data: sale });
     } catch (err) {
         res.status(400).json({ success: false, message: err.message });
     }

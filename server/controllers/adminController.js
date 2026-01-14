@@ -13,6 +13,7 @@ exports.getActiveProjects = async (req, res) => {
         // Get projects that are Active or Paused (not completed)
         const projects = await Project.find({ status: { $in: ['Active', 'Paused'] } })
             .populate('saleId')
+            .populate('remarks.user', 'name role')
             .sort({ createdAt: -1 });
 
         // Format the response with all needed details
@@ -42,7 +43,8 @@ exports.getActiveProjects = async (req, res) => {
                     collectedAmount: sale?.payment?.collectedAmount || 0,
                     pendingAmount: sale?.payment?.pendingAmount || 0,
                     paymentStatus: sale?.payment?.status || 'N/A',
-                    paymentType: sale?.payment?.paymentType || 'N/A'
+                    paymentType: sale?.payment?.paymentType || 'N/A',
+                    history: sale?.payment?.paymentHistory || []
                 },
                 // Checklist progress
                 progress: {
@@ -60,7 +62,10 @@ exports.getActiveProjects = async (req, res) => {
                 // Other details
                 socialLinks: project.socialLinks || [],
                 contentCalendarLink: project.contentCalendarLink,
+                socialLinks: project.socialLinks || [],
+                contentCalendarLink: project.contentCalendarLink,
                 timeline: project.timeline || [],
+                remarks: project.remarks || [],
                 // Original sale details
                 saleDetails: {
                     requirements: sale?.requirements,

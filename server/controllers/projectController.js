@@ -13,7 +13,8 @@ exports.getProjects = async (req, res) => {
                 { path: 'createdBy', select: 'name email' },
                 { path: 'assignedTo', select: 'name email' }
             ]
-        }).populate('qcRequests.createdBy', 'name email role');
+        }).populate('qcRequests.createdBy', 'name email role')
+            .populate('remarks.user', 'name role');
         res.status(200).json({ success: true, count: projects.length, data: projects });
     } catch (err) {
         res.status(400).json({ success: false, message: err.message });
@@ -110,54 +111,64 @@ exports.getQCRequests = async (req, res) => {
         const agg = await Project.aggregate([
             { $unwind: '$qcRequests' },
             // Lookup sale to find assigned Account Manager
-            { $lookup: {
-                from: 'sales',
-                localField: 'saleId',
-                foreignField: '_id',
-                as: 'sale'
-            }},
+            {
+                $lookup: {
+                    from: 'sales',
+                    localField: 'saleId',
+                    foreignField: '_id',
+                    as: 'sale'
+                }
+            },
             { $unwind: { path: '$sale', preserveNullAndEmptyArrays: true } },
-                // Lookup AM user (assignedTo)
-            { $lookup: {
-                from: 'users',
-                localField: 'sale.assignedTo',
-                foreignField: '_id',
-                as: 'am'
-            }},
+            // Lookup AM user (assignedTo)
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'sale.assignedTo',
+                    foreignField: '_id',
+                    as: 'am'
+                }
+            },
             { $unwind: { path: '$am', preserveNullAndEmptyArrays: true } },
             // Lookup Sales Executive (createdBy)
-            { $lookup: {
-                from: 'users',
-                localField: 'sale.createdBy',
-                foreignField: '_id',
-                as: 'salesExec'
-            }},
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'sale.createdBy',
+                    foreignField: '_id',
+                    as: 'salesExec'
+                }
+            },
             { $unwind: { path: '$salesExec', preserveNullAndEmptyArrays: true } },
             // Lookup QC request creator
-            { $lookup: {
-                from: 'users',
-                localField: 'qcRequests.createdBy',
-                foreignField: '_id',
-                as: 'qcCreator'
-            }},
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'qcRequests.createdBy',
+                    foreignField: '_id',
+                    as: 'qcCreator'
+                }
+            },
             { $unwind: { path: '$qcCreator', preserveNullAndEmptyArrays: true } },
-            { $project: {
-                projectId: '$_id',
-                clientName: 1,
-                companyName: 1,
-                checklist: 1,
-                socialLinks: 1,
-                contentCalendarLink: 1,
-                am: { _id: '$am._id', name: '$am.name', email: '$am.email' },
-                salesExec: { _id: '$salesExec._id', name: '$salesExec.name', email: '$salesExec.email' },
-                qcCreator: { _id: '$qcCreator._id', name: '$qcCreator.name', email: '$qcCreator.email', role: '$qcCreator.role' },
-                'qcRequest._id': '$qcRequests._id',
-                'qcRequest.requestDate': '$qcRequests.requestDate',
-                'qcRequest.details': '$qcRequests.details',
-                'qcRequest.status': '$qcRequests.status',
-                'qcRequest.feedback': '$qcRequests.feedback',
-                'qcRequest.resolvedDate': '$qcRequests.resolvedDate'
-            }},
+            {
+                $project: {
+                    projectId: '$_id',
+                    clientName: 1,
+                    companyName: 1,
+                    checklist: 1,
+                    socialLinks: 1,
+                    contentCalendarLink: 1,
+                    am: { _id: '$am._id', name: '$am.name', email: '$am.email' },
+                    salesExec: { _id: '$salesExec._id', name: '$salesExec.name', email: '$salesExec.email' },
+                    qcCreator: { _id: '$qcCreator._id', name: '$qcCreator.name', email: '$qcCreator.email', role: '$qcCreator.role' },
+                    'qcRequest._id': '$qcRequests._id',
+                    'qcRequest.requestDate': '$qcRequests.requestDate',
+                    'qcRequest.details': '$qcRequests.details',
+                    'qcRequest.status': '$qcRequests.status',
+                    'qcRequest.feedback': '$qcRequests.feedback',
+                    'qcRequest.resolvedDate': '$qcRequests.resolvedDate'
+                }
+            },
             { $sort: { 'qcRequest.requestDate': -1 } }
         ]);
 
@@ -235,6 +246,39 @@ exports.resubmitQCRequest = async (req, res) => {
         io.emit('project_updated', project);
 
         res.status(200).json({ success: true, data: { projectId: project._id, qc } });
+    } catch (err) {
+        res.status(400).json({ success: false, message: err.message });
+    }
+};
+
+// @desc    Add a Remark to a Project
+// @route   POST /api/projects/:id/remarks
+// @access  Private (Backend Manager, Admin, AM)
+exports.addRemark = async (req, res) => {
+    try {
+        const { text } = req.body;
+        if (!text) return res.status(400).json({ success: false, message: 'Text is required' });
+
+        let project = await Project.findById(req.params.id);
+        if (!project) return res.status(404).json({ success: false, message: 'Project not found' });
+
+        const remark = {
+            text,
+            date: new Date(),
+            user: req.user.id
+        };
+
+        project.remarks.push(remark);
+        await project.save();
+
+        // Populate the user of the new remark for the socket event
+        await project.populate('remarks.user', 'name role');
+
+        const io = req.app.get('io');
+        // We emit the whole updated project, or specifically the new remark if optimized
+        io.emit('project_updated', project);
+
+        res.status(200).json({ success: true, data: project });
     } catch (err) {
         res.status(400).json({ success: false, message: err.message });
     }

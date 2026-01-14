@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+    darkMode: 'class',
     content: [
         "./index.html",
         "./src/**/*.{js,ts,jsx,tsx}",
@@ -8,21 +9,24 @@ export default {
         extend: {
             colors: {
                 primary: {
-                    50: '#f0f9ff',
-                    100: '#e0f2fe',
-                    200: '#bae6fd',
-                    300: '#7dd3fc',
-                    400: '#38bdf8',
-                    500: '#0ea5e9',
-                    600: '#0284c7', // Brand Color
-                    700: '#0369a1',
-                    800: '#075985',
-                    900: '#0c4a6e',
+                    50: '#f7fee7',
+                    100: '#ecfccb',
+                    200: '#d9f99d',
+                    300: '#bef264',
+                    400: '#a3e635',
+                    500: '#84cc16',
+                    600: '#65a30d',
+                    700: '#4d7c0f',
+                    800: '#3f6212',
+                    900: '#365314',
+                    DEFAULT: '#D8F60D', // Neon Green Accent
                 },
                 dark: {
-                    bg: '#0f172a',
-                    card: '#1e293b',
-                    text: '#f1f5f9'
+                    bg: '#000000', // Pure Black
+                    card: '#111111', // Almost Black
+                    border: '#333333',
+                    text: '#ffffff',
+                    muted: '#888888'
                 }
             },
             fontFamily: {

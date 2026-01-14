@@ -78,6 +78,11 @@ const SaleSchema = new mongoose.Schema({
     isLocked: {
         type: Boolean,
         default: false
+    },
+    // New: Backend Manager Noted Flag
+    bmNoted: {
+        type: Boolean,
+        default: false
     }
 }, {
     timestamps: true

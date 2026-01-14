@@ -8,7 +8,8 @@ const {
     getQCRequests,
     updateQCRequest,
     resubmitQCRequest,
-    toggleStatus
+    toggleStatus,
+    addRemark
 } = require('../controllers/projectController');
 
 // All routes are protected
@@ -28,5 +29,7 @@ router.put('/:id/qc/:qcId', authorize('QC', 'Admin', 'Super Admin'), updateQCReq
 router.post('/:id/qc/:qcId/resubmit', authorize('Account Manager', 'Admin', 'Super Admin'), resubmitQCRequest);
 
 router.put('/:id/status', authorize('Account Manager', 'Sales Manager', 'Backend Manager', 'Admin', 'Super Admin'), toggleStatus);
+
+router.post('/:id/remarks', authorize('Backend Manager', 'Account Manager', 'Admin', 'Super Admin'), addRemark);
 
 module.exports = router;
