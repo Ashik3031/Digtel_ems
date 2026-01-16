@@ -45,7 +45,54 @@ const BMDashboard = () => {
     }, []);
 
     useEffect(() => {
+        // Request Notification permission
+        if ('Notification' in window && Notification.permission !== 'granted') {
+            Notification.requestPermission();
+        }
+
         if (!socket) return;
+
+        const playNotificationSound = () => {
+            try {
+                // Simple upbeat notification sound (beep)
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.type = 'sine';
+                oscillator.frequency.setValueAtTime(500, audioContext.currentTime);
+                oscillator.frequency.exponentialRampToValueAtTime(1000, audioContext.currentTime + 0.1);
+
+                gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 0.5);
+            } catch (e) {
+                console.error("Audio play failed", e);
+            }
+        };
+
+        const showNotification = (title, body) => {
+            playNotificationSound(); // Always play sound
+
+            if (Notification.permission === 'granted') {
+                const notification = new Notification(title, {
+                    body,
+                    icon: '/vite.svg',
+                    tag: 'bm-notification',
+                    requireInteraction: false // Let it hide automatically to be less annoying if frequent
+                });
+                notification.onclick = function () {
+                    window.focus();
+                    this.close();
+                };
+            }
+        };
+
         const handleProjectUpdate = (updatedProject) => {
             if (updatedProject && updatedProject._id) {
                 setProjects(prev => prev.map(p => p._id === updatedProject._id ? updatedProject : p));
@@ -53,8 +100,19 @@ const BMDashboard = () => {
                 fetchProjects();
             }
         };
-        const handleNewSale = () => { fetchSalesData(); };
-        const handlePaymentAdded = () => { fetchSalesData(); };
+
+        const handleNewSale = (data) => {
+            fetchSalesData();
+            const clientName = data?.sale?.clientName || 'A Prospect';
+            showNotification('New Sale Converted!', `${clientName} has been converted to a sale.`);
+        };
+
+        const handlePaymentAdded = (data) => {
+            fetchSalesData();
+            const clientName = data?.sale?.clientName || 'A Client';
+            const amount = data?.paymentAmount ? `₹${data.paymentAmount}` : 'a payment';
+            showNotification('Payment Received', `Received ${amount} from ${clientName}.`);
+        };
 
         socket.on('new_project', fetchProjects);
         socket.on('sale_handover', fetchProjects);
@@ -62,12 +120,16 @@ const BMDashboard = () => {
         socket.on('sale_converted', handleNewSale);
         socket.on('payment_added', handlePaymentAdded);
 
+        // Expose test function for button
+        window.testNotification = () => showNotification('Test Alert', 'This is a test notification.');
+
         return () => {
             socket.off('new_project', fetchProjects);
             socket.off('sale_handover', fetchProjects);
             socket.off('project_updated', handleProjectUpdate);
             socket.off('sale_converted', handleNewSale);
             socket.off('payment_added', handlePaymentAdded);
+            delete window.testNotification;
         };
     }, [socket]);
 
@@ -211,6 +273,15 @@ const BMDashboard = () => {
                                             {f}
                                         </button>
                                     ))}
+                                    <button onClick={() => {
+                                        if (window.testNotification) {
+                                            window.testNotification();
+                                        } else {
+                                            alert('Notification system not ready.');
+                                        }
+                                    }} className="px-4 py-2 rounded-lg text-sm font-bold transition-all bg-zinc-200 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400 hover:bg-zinc-300 dark:hover:bg-zinc-700">
+                                        Test Alert
+                                    </button>
                                 </div>
                             </div>
 
