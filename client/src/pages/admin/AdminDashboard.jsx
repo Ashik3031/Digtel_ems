@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useSocket } from '../../context/SocketContext';
 import {
@@ -12,10 +13,12 @@ import {
     MdNotifications,
     MdPayment,
     MdSend,
-    MdDeleteSweep
+    MdDeleteSweep,
+    MdComment
 } from 'react-icons/md';
 
 const AdminDashboard = () => {
+    const navigate = useNavigate();
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
     const [notifications, setNotifications] = useState([]);
@@ -185,6 +188,12 @@ const AdminDashboard = () => {
                     <p className="text-zinc-500 dark:text-zinc-400 font-medium">System-wide performance Overview</p>
                 </div>
                 <div className="flex items-center gap-3">
+                    <button
+                        onClick={() => navigate('/admin/discussions')}
+                        className="flex items-center gap-2 bg-black dark:bg-white text-white dark:text-black px-4 py-3 rounded-xl font-bold hover:opacity-90 transition-all text-sm shadow-lg"
+                    >
+                        <MdComment className="text-lg" /> Project Discussions
+                    </button>
                     {/* Notification Bell */}
                     <button
                         onClick={() => setShowNotificationPanel(!showNotificationPanel)}

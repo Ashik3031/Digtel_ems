@@ -176,6 +176,13 @@ const AMDashboard = () => {
                             <button onClick={() => setFilter('Paused')} className={`px-3 py-1 rounded transition-colors ${filter === 'Paused' ? 'bg-[#D8F60D] text-black font-bold' : 'bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-800 text-zinc-600 dark:text-zinc-300'}`}>Paused</button>
                         </div>
 
+                        <button
+                            onClick={() => navigate('/account-manager/discussions')}
+                            className="bg-[#D8F60D] hover:bg-[#bce00b] text-black font-bold px-4 py-2 rounded-lg transition-all shadow-md text-sm"
+                        >
+                            Discussions
+                        </button>
+
                         <button onClick={handleLogout} className="bg-white dark:bg-black text-red-600 border border-red-200 dark:border-red-900/30 px-4 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors text-sm">
                             Logout
                         </button>

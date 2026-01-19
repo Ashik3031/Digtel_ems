@@ -83,6 +83,32 @@ const SaleSchema = new mongoose.Schema({
     bmNoted: {
         type: Boolean,
         default: false
+    },
+    comments: [{
+        user: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User'
+        },
+        text: String,
+        date: {
+            type: Date,
+            default: Date.now
+        },
+        replies: [{
+            user: {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: 'User'
+            },
+            text: String,
+            date: {
+                type: Date,
+                default: Date.now
+            }
+        }]
+    }],
+    hasUnreadManagerComment: {
+        type: Boolean,
+        default: false
     }
 }, {
     timestamps: true

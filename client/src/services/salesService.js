@@ -54,3 +54,27 @@ export const getTargetStats = async () => {
     const response = await axios.get(`${API_URL}/target-stats`);
     return response.data;
 };
+
+// Add Comment
+export const addComment = async (id, text) => {
+    const response = await axios.post(`${API_URL}/${id}/comments`, { text });
+    return response.data;
+};
+
+// Add Reply
+export const addReply = async (id, commentId, text) => {
+    const response = await axios.post(`${API_URL}/${id}/comments/${commentId}/replies`, { text });
+    return response.data;
+};
+
+// Get Manager Dashboard Stats
+export const getManagerStats = async (params = {}) => {
+    const response = await axios.get(`${API_URL}/manager/stats`, { params });
+    return response.data;
+};
+
+// Mark comments read
+export const markCommentsRead = async (id) => {
+    const response = await axios.put(`${API_URL}/${id}/read-comments`);
+    return response.data;
+};

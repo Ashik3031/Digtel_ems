@@ -180,6 +180,16 @@ const QCDashboard = () => {
             <MdHistory size={20} />
             History
           </button>
+
+          <div className="mt-4 pt-4 border-t border-zinc-200 dark:border-zinc-800">
+            <button
+              onClick={() => navigate('/qc/discussions')}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-all"
+            >
+              <MdRefresh size={20} className="rotate-45" />
+              Project Discussions
+            </button>
+          </div>
         </nav>
 
         <div className="p-4 border-t border-zinc-200 dark:border-zinc-800">
@@ -268,9 +278,9 @@ const QCDashboard = () => {
                             <div className="flex items-start justify-between mb-2">
                               <h4 className="font-bold text-zinc-800 dark:text-zinc-200 text-lg leading-tight">{r.qcRequest.details}</h4>
                               <span className={`px-2 py-1 rounded text-xs font-bold uppercase tracking-wider ${r.qcRequest.status === 'Approved' ? 'bg-emerald-100 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' :
-                                  r.qcRequest.status === 'Rejected' ? 'bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400' :
-                                    r.qcRequest.status === 'Redo' ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400' :
-                                      'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400'
+                                r.qcRequest.status === 'Rejected' ? 'bg-red-100 dark:bg-red-500/20 text-red-600 dark:text-red-400' :
+                                  r.qcRequest.status === 'Redo' ? 'bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400' :
+                                    'bg-blue-100 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400'
                                 }`}>
                                 {r.qcRequest.status}
                               </span>

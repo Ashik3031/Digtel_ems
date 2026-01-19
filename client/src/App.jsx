@@ -5,12 +5,17 @@ import ThemeToggle from './components/ThemeToggle';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import SalesDashboard from './pages/sales/SalesDashboard';
+import SalesManagerInsights from './pages/sales/SalesManagerInsights';
+import SalesDiscussions from './pages/sales/SalesDiscussions';
 import AMDashboard from './pages/am/AMDashboard';
+import AMDiscussions from './pages/am/AMDiscussions';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import AdminDiscussions from './pages/admin/AdminDiscussions';
 import UserManagement from './pages/admin/UserManagement';
 import AuditLogViewer from './pages/admin/AuditLogViewer';
 import AdminLayout from './layouts/AdminLayout';
 import QCDashboard from './pages/qc/QCDashboard';
+import QCDiscussions from './pages/qc/QCDiscussions';
 import ProtectedRoute from './components/ProtectedRoute';
 import SalesAnalytics from './pages/admin/SalesAnalytics';
 import PerformanceOverview from './pages/admin/PerformanceOverview';
@@ -18,6 +23,7 @@ import TargetManagement from './pages/admin/TargetManagement';
 import AgentPerformanceDetail from './pages/admin/AgentPerformanceDetail';
 import ActiveProjects from './pages/admin/ActiveProjects';
 import BMDashboard from './pages/bm/BMDashboard';
+import BMDiscussions from './pages/bm/BMDiscussions';
 
 function App() {
   return (
@@ -30,11 +36,14 @@ function App() {
           {/* Sales Module */}
           <Route element={<ProtectedRoute allowedRoles={['Sales Executive', 'Sales Manager', 'Admin', 'Super Admin']} />}>
             <Route path="/sales" element={<SalesDashboard />} />
+            <Route path="/sales/manager-insights" element={<SalesManagerInsights />} />
+            <Route path="/sales/discussions" element={<SalesDiscussions />} />
           </Route>
 
           {/* Account Manager Module */}
           <Route element={<ProtectedRoute allowedRoles={['Account Manager', 'Admin', 'Super Admin']} />}>
             <Route path="/account-manager" element={<AMDashboard />} />
+            <Route path="/account-manager/discussions" element={<AMDiscussions />} />
           </Route>
 
           {/* Admin Module */}
@@ -47,12 +56,14 @@ function App() {
             <Route path="users" element={<UserManagement />} />
             <Route path="logs" element={<AuditLogViewer />} />
             <Route path="projects" element={<ActiveProjects />} />
+            <Route path="discussions" element={<AdminDiscussions />} />
             <Route path="sales-view" element={<SalesDashboard isEmbedded={true} />} />
           </Route>
 
           {/* Standalone QC Route */}
           <Route element={<ProtectedRoute allowedRoles={['QC', 'Admin', 'Super Admin']} />}>
             <Route path="/qc" element={<QCDashboard />} />
+            <Route path="/qc/discussions" element={<QCDiscussions />} />
           </Route>
 
           {/* Other Protect Routes */}
@@ -62,6 +73,7 @@ function App() {
 
           <Route element={<ProtectedRoute allowedRoles={['Backend Manager', 'Admin', 'Super Admin']} />}>
             <Route path="/backend-manager" element={<BMDashboard />} />
+            <Route path="/backend-manager/discussions" element={<BMDiscussions />} />
           </Route>
 
           <Route element={<ProtectedRoute allowedRoles={['Backend Team Member']} />}>

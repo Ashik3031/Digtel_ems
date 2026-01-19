@@ -3,11 +3,13 @@ import { useAuth } from '../../context/AuthContext';
 import { useSocket } from '../../context/SocketContext';
 import { useNavigate } from 'react-router-dom';
 import Swal from 'sweetalert2';
-import { createProspect, getSales, convertToSale, pushToBackend, revertToProspect, getTargetStats } from '../../services/salesService';
+import { FiMessageSquare } from 'react-icons/fi';
+import { createProspect, getSales, convertToSale, pushToBackend, revertToProspect, getTargetStats, getManagerStats } from '../../services/salesService';
 import PaymentModal from '../../components/sales/PaymentModal';
 import PushModal from '../../components/sales/PushModal';
 import SaleDetailModal from '../../components/sales/SaleDetailModal';
 import SalesSidebar from '../../components/sales/SalesSidebar';
+import ManagerAnalyticsModal from '../../components/sales/ManagerAnalyticsModal';
 
 const SalesDashboard = ({ isEmbedded = false }) => {
     const { logout, user } = useAuth();
@@ -19,6 +21,7 @@ const SalesDashboard = ({ isEmbedded = false }) => {
     const [selectedSale, setSelectedSale] = useState(null);
     const [modalType, setModalType] = useState(null);
     const [targetStats, setTargetStats] = useState(null);
+    const [showAnalytics, setShowAnalytics] = useState(false);
 
     // Calculate Current Date context
     const getInitialFilters = () => {
@@ -65,9 +68,14 @@ const SalesDashboard = ({ isEmbedded = false }) => {
     useEffect(() => {
         if (!socket) return;
 
-        const handleSalesUpdate = () => {
+        const handleSalesUpdate = (data) => {
             fetchSales();
             fetchTargetStats();
+
+            // Real-time update for Detail Modal if open
+            if (data && data.sale) {
+                setSelectedSale(prev => (prev && prev._id === data.sale._id) ? data.sale : prev);
+            }
         };
 
         // Listen for all sales-related events
@@ -288,6 +296,19 @@ const SalesDashboard = ({ isEmbedded = false }) => {
                                     Logout
                                 </button>
                             )}
+                            {(user.role === 'Sales Manager' || user.role === 'Admin' || user.role === 'Super Admin') && (
+                                <button onClick={() => navigate('/sales/manager-insights')} className="bg-white dark:bg-zinc-900 text-indigo-600 border border-indigo-200 dark:border-indigo-900/30 px-4 py-2 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-900/10 transition-colors font-bold text-sm flex items-center gap-2">
+                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" /></svg>
+                                    Manager Insights
+                                </button>
+                            )}
+                            <button onClick={() => navigate('/sales/discussions')} className="bg-white dark:bg-zinc-900 text-zinc-600 border border-zinc-200 dark:border-zinc-800 px-4 py-2 rounded-xl hover:bg-zinc-50 dark:hover:bg-zinc-800/50 transition-colors font-bold text-sm flex items-center gap-2 relative">
+                                <FiMessageSquare className="w-4 h-4" />
+                                Discussions
+                                {sales.some(s => s.hasUnreadManagerComment) && (
+                                    <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-white dark:border-black animate-pulse"></span>
+                                )}
+                            </button>
                             <button onClick={() => setShowCreate(true)} className="bg-[#D8F60D] hover:bg-[#bce00b] text-black w-auto flex items-center gap-2 shadow-lg shadow-[#D8F60D]/20 font-bold px-6 py-2 rounded-xl transition-all">
                                 + New Lead
                             </button>
@@ -342,7 +363,13 @@ const SalesDashboard = ({ isEmbedded = false }) => {
                             </div>
                             <div className="space-y-4">
                                 {sales.filter(s => s.status === 'Prospect').map(sale => (
-                                    <div key={sale._id} onClick={() => openDetailModal(sale)} className="bg-white dark:bg-zinc-900 p-4 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 hover:shadow-xl transition-all cursor-pointer group hover:-translate-y-1 ring-1 ring-transparent hover:ring-[#D8F60D]/50">
+                                    <div key={sale._id} onClick={() => sale.hasUnreadManagerComment ? navigate('/sales/discussions') : openDetailModal(sale)} className="relative bg-white dark:bg-zinc-900 p-4 rounded-2xl shadow-sm border border-zinc-200 dark:border-zinc-800 hover:shadow-xl transition-all cursor-pointer group hover:-translate-y-1 ring-1 ring-transparent hover:ring-[#D8F60D]/50">
+                                        {sale.hasUnreadManagerComment && (
+                                            <div className="absolute -top-1 -right-1 flex h-4 w-4 z-10">
+                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                                <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500 border-2 border-white dark:border-black"></span>
+                                            </div>
+                                        )}
                                         <div className="flex justify-between items-start mb-2">
                                             <h4 className="font-black text-black dark:text-white group-hover:text-[#D8F60D] transition-colors truncate pr-2">{sale.clientName}</h4>
                                             <span className="text-[9px] text-zinc-400 font-bold px-2 py-1 bg-zinc-50 dark:bg-black rounded-lg border border-zinc-100 dark:border-zinc-800 uppercase tracking-tighter whitespace-nowrap">{new Date(sale.createdAt).toLocaleDateString()}</span>
@@ -378,7 +405,13 @@ const SalesDashboard = ({ isEmbedded = false }) => {
                             </div>
                             <div className="space-y-4">
                                 {sales.filter(s => s.status === 'Sale').map(sale => (
-                                    <div key={sale._id} onClick={() => openDetailModal(sale)} className="bg-white dark:bg-zinc-900 p-5 rounded-2xl shadow-sm border-l-4 border-l-[#D8F60D] border-y border-r border-y-zinc-200 dark:border-y-zinc-800 border-r-zinc-200 dark:border-r-zinc-800 hover:shadow-xl transition-all cursor-pointer group hover:-translate-y-1 ring-1 ring-transparent hover:ring-[#D8F60D]/50">
+                                    <div key={sale._id} onClick={() => sale.hasUnreadManagerComment ? navigate('/sales/discussions') : openDetailModal(sale)} className="relative bg-white dark:bg-zinc-900 p-5 rounded-2xl shadow-sm border-l-4 border-l-[#D8F60D] border-y border-r border-y-zinc-200 dark:border-y-zinc-800 border-r-zinc-200 dark:border-r-zinc-800 hover:shadow-xl transition-all cursor-pointer group hover:-translate-y-1 ring-1 ring-transparent hover:ring-[#D8F60D]/50">
+                                        {sale.hasUnreadManagerComment && (
+                                            <div className="absolute -top-1 -right-1 flex h-4 w-4 z-10">
+                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                                <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500 border-2 border-white dark:border-black"></span>
+                                            </div>
+                                        )}
                                         <div className="flex justify-between items-start mb-3">
                                             <h4 className="font-black text-black dark:text-white group-hover:text-[#D8F60D] transition-colors">{sale.clientName}</h4>
                                             <div className="text-center">
@@ -414,7 +447,13 @@ const SalesDashboard = ({ isEmbedded = false }) => {
                             </div>
                             <div className="space-y-4">
                                 {sales.filter(s => s.status === 'Handover' || s.status === 'Completed').map(sale => (
-                                    <div key={sale._id} onClick={() => openDetailModal(sale)} className="bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 opacity-60 grayscale hover:grayscale-0 hover:opacity-100 transition-all cursor-pointer">
+                                    <div key={sale._id} onClick={() => sale.hasUnreadManagerComment ? navigate('/sales/discussions') : openDetailModal(sale)} className="relative bg-white dark:bg-zinc-900 p-4 rounded-2xl border border-zinc-200 dark:border-zinc-800 opacity-60 grayscale hover:grayscale-0 hover:opacity-100 transition-all cursor-pointer">
+                                        {sale.hasUnreadManagerComment && (
+                                            <div className="absolute -top-1 -right-1 flex h-4 w-4 z-10">
+                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                                                <span className="relative inline-flex rounded-full h-4 w-4 bg-red-500 border-2 border-white dark:border-black"></span>
+                                            </div>
+                                        )}
                                         <div className="flex justify-between items-start mb-2">
                                             <h4 className="font-bold text-zinc-700 dark:text-zinc-300">{sale.clientName}</h4>
                                             <span className="text-[9px] bg-zinc-100 dark:bg-zinc-800 text-zinc-500 px-2 py-1 rounded-lg font-black uppercase">{sale.status}</span>
@@ -472,6 +511,7 @@ const SalesDashboard = ({ isEmbedded = false }) => {
             {modalType === 'payment' && <PaymentModal onClose={handleCloseModal} onSubmit={handlePaymentSubmit} />}
             {modalType === 'push' && <PushModal sale={selectedSale} onClose={handleCloseModal} onSubmit={handlePushSubmit} />}
             {modalType === 'detail' && <SaleDetailModal sale={selectedSale} onClose={handleCloseModal} onUpdate={fetchSales} />}
+            {showAnalytics && <ManagerAnalyticsModal onClose={() => setShowAnalytics(false)} filters={filters} />}
         </div>
     );
 };

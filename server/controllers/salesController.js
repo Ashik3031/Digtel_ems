@@ -1,6 +1,8 @@
 const Sale = require('../models/Sale');
 const AuditLog = require('../models/AuditLog');
 const Target = require('../models/Target');
+const { sendWebPush } = require('../config/webPush');
+const User = require('../models/User');
 
 // @desc    Create new prospect
 // @route   POST /api/sales
@@ -27,6 +29,17 @@ exports.createProspect = async (req, res) => {
                 sale,
                 user: req.user.name,
                 timestamp: new Date()
+            });
+
+            // Push Notification to Admins and Sales Managers
+            const notifyRoles = ['Admin', 'Super Admin', 'Sales Manager'];
+            User.find({ role: { $in: notifyRoles } }).select('_id').then(users => {
+                const userIds = users.map(u => u._id);
+                sendWebPush(userIds, {
+                    title: 'New Prospect Created',
+                    body: `${req.user.name} created a new prospect for ${clientName}`,
+                    data: { saleId: sale._id.toString() }
+                });
             });
         }
 
@@ -86,7 +99,7 @@ exports.updateSale = async (req, res) => {
 exports.getSales = async (req, res) => {
     try {
         let query = {};
-        const { year, month, week } = req.query;
+        const { year, month, week, search, status: statusFilter } = req.query;
 
         // Date Filtering Logic
         if (year) {
@@ -94,13 +107,10 @@ exports.getSales = async (req, res) => {
             const y = parseInt(year);
 
             if (week) {
-                const m = parseInt(month) || 0; // 0-indexed in JS Date
+                const m = parseInt(month) || 0;
                 const w = parseInt(week);
-
                 const firstDayOfMonth = new Date(y, m, 1);
-                const dayOfWeek = firstDayOfMonth.getDay(); // 0 (Sun) - 6 (Sat)
-
-                // Calculate the end date of the first week (first Sunday)
+                const dayOfWeek = firstDayOfMonth.getDay();
                 const daysToFirstSunday = dayOfWeek === 0 ? 0 : 7 - dayOfWeek;
                 const firstSundayDate = new Date(y, m, 1 + daysToFirstSunday);
                 firstSundayDate.setHours(23, 59, 59, 999);
@@ -113,36 +123,64 @@ exports.getSales = async (req, res) => {
                     startDate = new Date(firstSundayDate);
                     startDate.setDate(startDate.getDate() + daysToAdd);
                     startDate.setHours(0, 0, 0, 0);
-
                     endDate = new Date(startDate);
                     endDate.setDate(startDate.getDate() + 6);
                     endDate.setHours(23, 59, 59, 999);
                 }
-
-                // Range Check: Ensure we don't exceed the month
                 const lastDayOfMonth = new Date(y, m + 1, 0, 23, 59, 59, 999);
-                if (endDate > lastDayOfMonth) {
-                    endDate = lastDayOfMonth;
-                }
+                if (endDate > lastDayOfMonth) endDate = lastDayOfMonth;
             } else if (month) {
                 const m = parseInt(month);
                 startDate = new Date(y, m, 1);
-                endDate = new Date(y, m + 1, 0); // Last day of month
+                endDate = new Date(y, m + 1, 0);
                 endDate.setHours(23, 59, 59, 999);
             } else {
                 startDate = new Date(y, 0, 1);
                 endDate = new Date(y, 11, 31, 23, 59, 59, 999);
             }
-
             query.createdAt = { $gte: startDate, $lte: endDate };
         }
 
-        // Role-based restriction
-        if (!['Super Admin', 'Admin', 'Sales Manager', 'Backend Manager'].includes(req.user.role)) {
+        // Search Filter
+        if (search) {
+            query.$or = [
+                { clientName: { $regex: search, $options: 'i' } },
+                { companyName: { $regex: search, $options: 'i' } }
+            ];
+        }
+
+        // Status Filter
+        if (statusFilter) {
+            query.status = statusFilter;
+        }
+
+        // Role-based visibility logic
+        const unrestrictedRoles = ['Super Admin', 'Admin', 'Sales Manager'];
+        const backendRoles = ['Backend Manager', 'QC', 'Account Manager', 'Backend Team Member'];
+
+        if (backendRoles.includes(req.user.role)) {
+            // Backend roles only see discussions for projects with status 'Handover' or 'Completed'
+            // If a specific status filter is applied, we must ensure it's allowed
+            if (statusFilter) {
+                if (['Sale', 'Handover', 'Completed'].includes(statusFilter)) {
+                    query.status = statusFilter;
+                } else {
+                    // User requested a status they are not allowed to see
+                    return res.status(200).json({ success: true, data: [] });
+                }
+            } else {
+                // No specific filter, show all allowed statuses
+                query.status = { $in: ['Sale', 'Handover', 'Completed'] };
+            }
+        } else if (!unrestrictedRoles.includes(req.user.role)) {
+            // Other roles (like Sales Executives) only see their own assigned sales
             query.assignedTo = req.user.id;
         }
 
-        const sales = await Sale.find(query).sort({ createdAt: -1 }).populate('assignedTo createdBy', 'name email');
+        const sales = await Sale.find(query)
+            .sort({ updatedAt: -1 }) // Sort by last activity
+            .populate('assignedTo createdBy', 'name email')
+            .populate('comments.user comments.replies.user', 'name role');
         res.status(200).json({ success: true, count: sales.length, data: sales });
     } catch (err) {
         res.status(400).json({ success: false, message: err.message });
@@ -337,6 +375,15 @@ exports.pushToBackend = async (req, res) => {
                 user: req.user.name,
                 timestamp: new Date()
             });
+
+            // Web Push Notification to the assigned Account Manager
+            if (sale.assignedTo) {
+                sendWebPush([sale.assignedTo], {
+                    title: 'New Project Handover',
+                    body: `A new project for ${sale.clientName} has been handed over to you.`,
+                    data: { projectId: project._id.toString() }
+                });
+            }
         }
         // -----------------------------------------------------------
 
@@ -545,6 +592,210 @@ exports.markSaleNoted = async (req, res) => {
         await sale.save();
 
         res.status(200).json({ success: true, data: sale });
+    } catch (err) {
+        res.status(400).json({ success: false, message: err.message });
+    }
+};
+
+// @desc    Add comment to sale
+// @route   POST /api/sales/:id/comments
+// @access  Private
+exports.addComment = async (req, res) => {
+    try {
+        const { text } = req.body;
+        const sale = await Sale.findById(req.params.id);
+
+        if (!sale) {
+            return res.status(404).json({ success: false, message: 'Sale not found' });
+        }
+
+        sale.comments.push({
+            user: req.user.id,
+            text,
+            date: new Date()
+        });
+
+        // If manager/admin comments, mark as unread for agent and notify
+        if (['Sales Manager', 'Admin', 'Super Admin'].includes(req.user.role)) {
+            sale.hasUnreadManagerComment = true;
+
+            // Send Push Notification to Creator
+            const { sendWebPush } = require('../config/webPush');
+            const User = require('../models/User');
+            const creator = await User.findById(sale.createdBy);
+            if (creator && creator.pushSubscriptions && creator.pushSubscriptions.length > 0) {
+                const payload = JSON.stringify({
+                    title: 'New Remark from Manager',
+                    body: `${req.user.name} remarked on ${sale.clientName}: "${text.substring(0, 50)}${text.length > 50 ? '...' : ''}"`,
+                    icon: '/icon-192.png',
+                    data: { url: '/sales' }
+                });
+                creator.pushSubscriptions.forEach(sub => sendWebPush(sub, payload));
+            }
+        }
+
+        await sale.save();
+
+        // Populate and notify
+        const populatedSale = await Sale.findById(sale._id).populate('comments.user', 'name role');
+
+        const io = req.app.get('io');
+        if (io) {
+            io.emit('sale_updated', { sale: populatedSale, user: req.user.name, type: 'comment' });
+        }
+
+        res.status(200).json({ success: true, data: populatedSale.comments });
+    } catch (err) {
+        res.status(400).json({ success: false, message: err.message });
+    }
+};
+
+// @desc    Add reply to a comment
+// @route   POST /api/sales/:id/comments/:commentId/replies
+// @access  Private
+exports.addReply = async (req, res) => {
+    try {
+        const { text } = req.body;
+        const sale = await Sale.findById(req.params.id);
+
+        if (!sale) {
+            return res.status(404).json({ success: false, message: 'Sale not found' });
+        }
+
+        const comment = sale.comments.id(req.params.commentId);
+        if (!comment) {
+            return res.status(404).json({ success: false, message: 'Comment not found' });
+        }
+
+        comment.replies.push({
+            user: req.user.id,
+            text,
+            date: new Date()
+        });
+
+        // If manager/admin replies, mark as unread for agent and notify
+        if (['Sales Manager', 'Admin', 'Super Admin'].includes(req.user.role)) {
+            sale.hasUnreadManagerComment = true;
+
+            // Send Push Notification to Creator
+            const { sendWebPush } = require('../config/webPush');
+            const User = require('../models/User');
+            const creator = await User.findById(sale.createdBy);
+            if (creator && creator.pushSubscriptions && creator.pushSubscriptions.length > 0) {
+                const payload = JSON.stringify({
+                    title: 'New Reply from Manager',
+                    body: `${req.user.name} replied on ${sale.clientName}: "${text.substring(0, 50)}${text.length > 50 ? '...' : ''}"`,
+                    icon: '/icon-192.png',
+                    data: { url: '/sales' }
+                });
+                creator.pushSubscriptions.forEach(sub => sendWebPush(sub, payload));
+            }
+        }
+
+        await sale.save();
+
+        const populatedSale = await Sale.findById(sale._id).populate('comments.user comments.replies.user', 'name role');
+
+        const io = req.app.get('io');
+        if (io) {
+            io.emit('sale_updated', { sale: populatedSale, user: req.user.name, type: 'reply' });
+        }
+
+        res.status(200).json({ success: true, data: comment.replies });
+    } catch (err) {
+        res.status(400).json({ success: false, message: err.message });
+    }
+};
+
+// @desc    Get Sales Manager Dashboard Stats
+// @route   GET /api/sales/manager/stats
+// @access  Private (Sales Manager, Admin)
+exports.getManagerDashboardStats = async (req, res) => {
+    try {
+        const { year, month } = req.query;
+        let query = {};
+
+        if (year) {
+            const startDate = new Date(year, month || 0, 1);
+            const endDate = new Date(year, month !== undefined ? parseInt(month) + 1 : 12, 0, 23, 59, 59);
+            query.createdAt = { $gte: startDate, $lte: endDate };
+        }
+
+        // 1. Total Stats
+        const totalSales = await Sale.countDocuments(query);
+        const prospects = await Sale.countDocuments({ ...query, status: 'Prospect' });
+        const conversions = await Sale.countDocuments({ ...query, status: { $in: ['Sale', 'Handover', 'Completed'] } });
+
+        const revenueData = await Sale.aggregate([
+            { $match: { ...query, 'payment.amount': { $exists: true } } },
+            { $group: { _id: null, total: { $sum: '$payment.amount' }, collected: { $sum: '$payment.collectedAmount' } } }
+        ]);
+
+        // 2. Executive Performance
+        const execPerformance = await Sale.aggregate([
+            { $match: query },
+            {
+                $group: {
+                    _id: '$createdBy',
+                    totalLeads: { $sum: 1 },
+                    conversions: { $sum: { $cond: [{ $in: ['$status', ['Sale', 'Handover', 'Completed']] }, 1, 0] } },
+                    revenue: { $sum: { $ifNull: ['$payment.amount', 0] } }
+                }
+            },
+            { $lookup: { from: 'users', localField: '_id', foreignField: '_id', as: 'user' } },
+            { $unwind: '$user' },
+            { $project: { name: '$user.name', totalLeads: 1, conversions: 1, revenue: 1 } }
+        ]);
+
+        res.status(200).json({
+            success: true,
+            data: {
+                summary: {
+                    totalLeads: totalSales,
+                    prospects,
+                    conversions,
+                    conversionRate: totalSales > 0 ? ((conversions / totalSales) * 100).toFixed(1) : 0,
+                    totalRevenue: revenueData[0]?.total || 0,
+                    collectedRevenue: revenueData[0]?.collected || 0
+                },
+                executives: execPerformance,
+                recentActivity: await Sale.aggregate([
+                    { $unwind: '$comments' },
+                    { $sort: { 'comments.date': -1 } },
+                    { $limit: 20 },
+                    { $lookup: { from: 'users', localField: 'comments.user', foreignField: '_id', as: 'commentUser' } },
+                    { $unwind: '$commentUser' },
+                    {
+                        $project: {
+                            clientName: 1,
+                            text: '$comments.text',
+                            date: '$comments.date',
+                            userName: '$commentUser.name',
+                            userRole: '$commentUser.role'
+                        }
+                    }
+                ])
+            }
+        });
+    } catch (err) {
+        res.status(400).json({ success: false, message: err.message });
+    }
+};
+
+// @desc    Mark Sale Comments as Read
+// @route   PUT /api/sales/:id/read-comments
+// @access  Private
+exports.markCommentsRead = async (req, res) => {
+    try {
+        const sale = await Sale.findById(req.params.id);
+        if (!sale) {
+            return res.status(404).json({ success: false, message: 'Sale not found' });
+        }
+
+        sale.hasUnreadManagerComment = false;
+        await sale.save();
+
+        res.status(200).json({ success: true });
     } catch (err) {
         res.status(400).json({ success: false, message: err.message });
     }

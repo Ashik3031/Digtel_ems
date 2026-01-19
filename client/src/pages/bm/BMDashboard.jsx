@@ -242,6 +242,9 @@ const BMDashboard = () => {
                     <button onClick={() => setActiveView('history')} className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold ${activeView === 'history' ? 'bg-[#D8F60D] text-black shadow-md' : 'text-zinc-500 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-black dark:hover:text-white'}`}>
                         <MdHistory className="text-xl" /> Sales History
                     </button>
+                    <button onClick={() => navigate('/backend-manager/discussions')} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-zinc-500 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-black dark:hover:text-white">
+                        <MdComment className="text-xl text-[#D8F60D]" /> Project Discussions
+                    </button>
                 </nav>
                 <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-zinc-200 dark:border-zinc-800">
                     <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-500 hover:bg-red-500/10 hover:text-red-500 transition-all font-bold">

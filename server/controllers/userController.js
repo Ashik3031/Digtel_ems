@@ -49,3 +49,30 @@ exports.getUsers = async (req, res) => {
         res.status(400).json({ success: false, message: err.message });
     }
 };
+// @desc    Update Web Push Subscription
+// @route   POST /api/users/subscribe
+// @access  Private
+exports.subscribeUser = async (req, res) => {
+    try {
+        const subscription = req.body;
+        if (!subscription || !subscription.endpoint) {
+            return res.status(400).json({ success: false, message: 'Subscription object is required' });
+        }
+
+        const user = await User.findById(req.user.id);
+        if (!user) {
+            return res.status(404).json({ success: false, message: 'User not found' });
+        }
+
+        // Add subscription if it doesn't exist
+        const exists = user.pushSubscriptions.some(sub => sub.endpoint === subscription.endpoint);
+        if (!exists) {
+            user.pushSubscriptions.push(subscription);
+            await user.save();
+        }
+
+        res.status(200).json({ success: true, message: 'Subscribed to push notifications' });
+    } catch (err) {
+        res.status(400).json({ success: false, message: err.message });
+    }
+};

@@ -8,13 +8,20 @@ const {
     getTargetStats,
     updateSale,
     addPayment,
-    markSaleNoted
+    markSaleNoted,
+    addComment,
+    addReply,
+    getManagerDashboardStats,
+    markCommentsRead
 } = require('../controllers/salesController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
 router.use(protect);
+
+// Manager Dashboard Stats
+router.get('/manager/stats', authorize('Sales Manager', 'Admin', 'Super Admin'), getManagerDashboardStats);
 
 // Target Stats (Self/Admin)
 router.get('/target-stats', authorize('Sales Executive', 'Admin', 'Super Admin'), getTargetStats);
@@ -26,6 +33,11 @@ router.route('/')
 
 // BM Actions
 router.put('/:id/note', authorize('Backend Manager', 'Super Admin'), markSaleNoted);
+
+// Comments
+router.put('/:id/read-comments', markCommentsRead);
+router.post('/:id/comments', authorize('Sales Executive', 'Sales Manager', 'Admin', 'Super Admin'), addComment);
+router.post('/:id/comments/:commentId/replies', authorize('Sales Executive', 'Sales Manager', 'Admin', 'Super Admin'), addReply);
 
 // Actions
 router.put('/:id', authorize('Sales Executive', 'Sales Manager', 'Admin', 'Super Admin'), updateSale);

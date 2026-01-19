@@ -1,6 +1,9 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import io from 'socket.io-client';
 import { useAuth } from './AuthContext';
+import { subscribeToPush, registerServiceWorker } from '../push-notifications';
+import axios from 'axios';
+import Swal from 'sweetalert2';
 
 const SocketContext = createContext();
 
@@ -12,15 +15,24 @@ export const SocketProvider = ({ children }) => {
 
     useEffect(() => {
         if (user) {
+            // Register SW and Setup Push
+            registerServiceWorker().then(() => {
+                subscribeToPush().then(subscription => {
+                    if (subscription) {
+                        axios.put('/api/users/subscribe', subscription)
+                            .catch(err => console.error('Failed to sync push subscription:', err));
+                    }
+                });
+            });
+
             // Initialize socket connection
-            // Use window.location.hostname to auto-adapt to localhost or network IP
             const socketUrl = process.env.NODE_ENV === 'production'
                 ? '/'
                 : `http://${window.location.hostname}:5005`;
 
             const newSocket = io(socketUrl, {
                 withCredentials: true,
-                transports: ['websocket', 'polling'] // Ensure websocket is tried first
+                transports: ['websocket', 'polling']
             });
 
             console.log('Socket connecting...');
@@ -31,7 +43,9 @@ export const SocketProvider = ({ children }) => {
 
             setSocket(newSocket);
 
-            return () => newSocket.close();
+            return () => {
+                newSocket.close();
+            };
         } else {
             if (socket) {
                 socket.close();

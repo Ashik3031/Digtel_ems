@@ -1,5 +1,7 @@
 const Project = require('../models/Project');
 const AuditLog = require('../models/AuditLog');
+const { sendWebPush } = require('../config/webPush');
+const User = require('../models/User');
 
 // @desc    Get all projects (AM Dashboard)
 // @route   GET /api/projects
@@ -95,6 +97,16 @@ exports.createQCRequest = async (req, res) => {
 
         const io = req.app.get('io');
         io.emit('project_updated', project); // Notify watchers
+
+        // Notify QC team
+        User.find({ role: 'QC' }).select('_id').then(qcs => {
+            const userIds = qcs.map(u => u._id);
+            sendWebPush(userIds, {
+                title: 'New QC Request',
+                body: `New QC request for ${project.clientName}: ${details}`,
+                data: { projectId: project._id.toString() }
+            });
+        });
 
         res.status(200).json({ success: true, data: project });
     } catch (err) {
@@ -202,6 +214,15 @@ exports.updateQCRequest = async (req, res) => {
         const io = req.app.get('io');
         io.emit('qc_updated', { projectId: project._id, qc });
         io.emit('project_updated', project);
+
+        // Notify the AM/Creator of the QC request
+        if (qc.createdBy) {
+            sendWebPush([qc.createdBy], {
+                title: `QC Request ${status}`,
+                body: `Your QC request for ${project.clientName} has been ${status.toLowerCase()}.`,
+                data: { projectId: project._id.toString() }
+            });
+        }
 
         res.status(200).json({ success: true, data: { projectId: project._id, qc } });
     } catch (err) {
