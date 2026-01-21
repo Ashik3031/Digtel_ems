@@ -1,4 +1,4 @@
-import { Outlet, Navigate } from 'react-router-dom';
+import { Outlet, Navigate, useLocation } from 'react-router-dom';
 import AdminSidebar from '../components/admin/AdminSidebar';
 import { useAuth } from '../context/AuthContext';
 
@@ -12,10 +12,13 @@ const AdminLayout = () => {
         return <Navigate to="/dashboard" replace />;
     }
 
+    const location = useLocation();
+    const isFullScreenPage = ['/admin/discussions', '/admin/sales-view'].includes(location.pathname);
+
     return (
         <div className="flex bg-slate-50 min-h-screen overflow-hidden">
             <AdminSidebar />
-            <div className="flex-1 h-screen overflow-y-auto p-8 lg:p-12">
+            <div className={`flex-1 h-screen ${isFullScreenPage ? 'overflow-hidden p-0' : 'overflow-y-auto p-8 lg:p-12'}`}>
                 <Outlet />
             </div>
         </div>

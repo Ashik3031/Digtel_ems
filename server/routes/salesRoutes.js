@@ -12,7 +12,10 @@ const {
     addComment,
     addReply,
     getManagerDashboardStats,
-    markCommentsRead
+    markCommentsRead,
+    requestDelete,
+    rejectDelete,
+    deleteSale
 } = require('../controllers/salesController');
 const { protect, authorize } = require('../middleware/authMiddleware');
 
@@ -38,6 +41,11 @@ router.put('/:id/note', authorize('Backend Manager', 'Super Admin'), markSaleNot
 router.put('/:id/read-comments', markCommentsRead);
 router.post('/:id/comments', authorize('Sales Executive', 'Sales Manager', 'Admin', 'Super Admin'), addComment);
 router.post('/:id/comments/:commentId/replies', authorize('Sales Executive', 'Sales Manager', 'Admin', 'Super Admin'), addReply);
+
+// Deletion Workflow
+router.put('/:id/request-delete', authorize('Sales Executive', 'Sales Manager'), requestDelete);
+router.put('/:id/reject-delete', authorize('Sales Manager', 'Admin', 'Super Admin'), rejectDelete);
+router.delete('/:id', authorize('Sales Manager', 'Admin', 'Super Admin'), deleteSale);
 
 // Actions
 router.put('/:id', authorize('Sales Executive', 'Sales Manager', 'Admin', 'Super Admin'), updateSale);

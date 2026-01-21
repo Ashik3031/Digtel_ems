@@ -8,6 +8,13 @@ const PaymentModal = ({ onClose, onSubmit }) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+
+        // Validation: Price vs Total Price
+        if (Number(collected) > Number(amount)) {
+            alert('Collected amount cannot be greater than the total price!');
+            return;
+        }
+
         onSubmit({
             amount: Number(amount),
             collectedAmount: Number(collected),

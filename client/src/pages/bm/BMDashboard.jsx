@@ -110,7 +110,7 @@ const BMDashboard = () => {
         const handlePaymentAdded = (data) => {
             fetchSalesData();
             const clientName = data?.sale?.clientName || 'A Client';
-            const amount = data?.paymentAmount ? `₹${data.paymentAmount}` : 'a payment';
+            const amount = data?.paymentAmount ? `AED${data.paymentAmount}` : 'a payment';
             showNotification('Payment Received', `Received ${amount} from ${clientName}.`);
         };
 
@@ -319,13 +319,13 @@ const BMDashboard = () => {
                                                 <div className="bg-white dark:bg-zinc-900/80 rounded-lg p-3 border border-zinc-200 dark:border-zinc-800 mb-4">
                                                     <div className="flex justify-between text-sm mb-1">
                                                         <span className="text-zinc-500 dark:text-zinc-500">Collected</span>
-                                                        <span className="text-black dark:text-[#D8F60D] font-bold">₹{sale.payment?.collectedAmount}</span>
+                                                        <span className="text-black dark:text-[#D8F60D] font-bold">AED{sale.payment?.collectedAmount}</span>
                                                     </div>
                                                     {sale.payment?.paymentHistory?.length > 0 && (
                                                         <div className="mt-2 text-xs text-zinc-500 dark:text-zinc-400 border-t border-zinc-200 dark:border-zinc-800 pt-2">
                                                             <p className="mb-1 text-zinc-400 dark:text-zinc-500 uppercase tracking-wider text-[10px]">Latest Payment</p>
                                                             <div className="flex justify-between font-medium">
-                                                                <span className="text-black dark:text-white">₹{sale.payment.paymentHistory[sale.payment.paymentHistory.length - 1].amount}</span>
+                                                                <span className="text-black dark:text-white">AED{sale.payment.paymentHistory[sale.payment.paymentHistory.length - 1].amount}</span>
                                                                 <span>{formatDate(sale.payment.paymentHistory[sale.payment.paymentHistory.length - 1].date)}</span>
                                                             </div>
                                                         </div>
@@ -486,7 +486,7 @@ const BMDashboard = () => {
                                                                             {project.payment.history.map((pay, idx) => (
                                                                                 <div key={idx} className="flex justify-between items-center text-sm p-3 hover:bg-zinc-50 dark:hover:bg-black/40 rounded-lg transition-colors border-b border-zinc-100 dark:border-zinc-800/50 last:border-0">
                                                                                     <div>
-                                                                                        <p className="font-bold text-black dark:text-white">₹{pay.amount}</p>
+                                                                                        <p className="font-bold text-black dark:text-white">AED{pay.amount}</p>
                                                                                         <p className="text-xs text-zinc-500">{pay.notes || 'No notes'}</p>
                                                                                     </div>
                                                                                     <div className="text-right">
@@ -498,11 +498,11 @@ const BMDashboard = () => {
                                                                         </div>
                                                                         <div className="mt-4 pt-3 border-t border-zinc-200 dark:border-zinc-800 flex justify-between text-sm font-bold">
                                                                             <span className="text-zinc-500 dark:text-zinc-400">Total Collected:</span>
-                                                                            <span className="text-[#D8F60D] text-lg">₹{project.payment.collectedAmount}</span>
+                                                                            <span className="text-[#D8F60D] text-lg">AED{project.payment.collectedAmount}</span>
                                                                         </div>
                                                                         <div className="flex justify-between text-sm mt-1">
                                                                             <span className="text-zinc-500">Pending:</span>
-                                                                            <span className="text-red-500 dark:text-red-400">₹{project.payment.pendingAmount}</span>
+                                                                            <span className="text-red-500 dark:text-red-400">AED{project.payment.pendingAmount}</span>
                                                                         </div>
                                                                     </div>
                                                                 )}
@@ -547,12 +547,12 @@ const BMDashboard = () => {
                                                     <tr key={sale._id} className="hover:bg-zinc-100 dark:hover:bg-black/20 transition-colors">
                                                         <td className="p-4 font-bold text-black dark:text-white">{sale.clientName}</td>
                                                         <td className="p-4 text-zinc-500 dark:text-zinc-400 text-sm">{sale.companyName}</td>
-                                                        <td className="p-4 font-bold text-[#D8F60D] drop-shadow-sm text-shadow-sm">₹{sale.payment?.collectedAmount}</td>
-                                                        <td className="p-4 text-red-500 dark:text-red-400 font-medium">₹{sale.payment?.pendingAmount}</td>
+                                                        <td className="p-4 font-bold text-[#D8F60D] drop-shadow-sm text-shadow-sm">AED{sale.payment?.collectedAmount}</td>
+                                                        <td className="p-4 text-red-500 dark:text-red-400 font-medium">AED{sale.payment?.pendingAmount}</td>
                                                         <td className="p-4 text-sm">
                                                             {sale.payment?.paymentHistory?.length > 0 ? (
                                                                 <>
-                                                                    <div className="text-black dark:text-white">₹{sale.payment.paymentHistory[sale.payment.paymentHistory.length - 1].amount}</div>
+                                                                    <div className="text-black dark:text-white">AED{sale.payment.paymentHistory[sale.payment.paymentHistory.length - 1].amount}</div>
                                                                     <div className="text-[10px] text-zinc-500">{formatDate(sale.payment.paymentHistory[sale.payment.paymentHistory.length - 1].date)}</div>
                                                                 </>
                                                             ) : <span className="text-zinc-400">-</span>}

@@ -39,8 +39,26 @@ export const pushToBackend = async (id, checklistData) => {
 };
 
 // Revert to Prospect
-export const revertToProspect = async (id) => {
-    const response = await axios.put(`${API_URL}/${id}/revert`);
+export const revertToProspect = async (id, reason) => {
+    const response = await axios.put(`${API_URL}/${id}/revert`, { reason });
+    return response.data;
+};
+
+// Request Deletion
+export const requestDelete = async (id, reason) => {
+    const response = await axios.put(`${API_URL}/${id}/request-delete`, { reason });
+    return response.data;
+};
+
+// Reject Deletion
+export const rejectDelete = async (id) => {
+    const response = await axios.put(`${API_URL}/${id}/reject-delete`);
+    return response.data;
+};
+
+// Delete Sale (Hard Delete)
+export const deleteSale = async (id, reason) => {
+    const response = await axios.delete(`${API_URL}/${id}`, { data: { reason } });
     return response.data;
 };
 

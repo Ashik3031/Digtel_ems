@@ -109,6 +109,31 @@ const SaleSchema = new mongoose.Schema({
     hasUnreadManagerComment: {
         type: Boolean,
         default: false
+    },
+    // Revert History
+    revertHistory: [{
+        reason: String,
+        revertedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User'
+        },
+        date: {
+            type: Date,
+            default: Date.now
+        }
+    }],
+    // Deletion Request
+    deleteRequest: {
+        isRequested: {
+            type: Boolean,
+            default: false
+        },
+        reason: String,
+        requestedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: 'User'
+        },
+        requestedAt: Date
     }
 }, {
     timestamps: true

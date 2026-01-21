@@ -406,6 +406,7 @@ exports.pushToBackend = async (req, res) => {
 // @access  Private (Sales Only)
 exports.revertToProspect = async (req, res) => {
     try {
+        const { reason } = req.body;
         let sale = await Sale.findById(req.params.id);
 
         if (!sale) {
@@ -421,6 +422,13 @@ exports.revertToProspect = async (req, res) => {
         }
 
         sale.status = 'Prospect';
+
+        // Add to history
+        sale.revertHistory.push({
+            reason: reason || 'No reason provided',
+            revertedBy: req.user.id
+        });
+
         await sale.save();
 
         // Real-time update
@@ -429,6 +437,7 @@ exports.revertToProspect = async (req, res) => {
             io.emit('sale_reverted', {
                 sale,
                 user: req.user.name,
+                reason,
                 timestamp: new Date()
             });
         }
@@ -437,10 +446,120 @@ exports.revertToProspect = async (req, res) => {
             action: 'REVERT_TO_PROSPECT',
             performedBy: req.user.id,
             targetResource: `Sale: ${sale.clientName}`,
-            details: { saleId: sale._id }
+            details: { saleId: sale._id, reason }
         });
 
         res.status(200).json({ success: true, data: sale });
+    } catch (err) {
+        res.status(400).json({ success: false, message: err.message });
+    }
+};
+
+// @desc    Request Deletion of Sale/Prospect
+// @route   PUT /api/sales/:id/request-delete
+// @access  Private (Sales Executive)
+exports.requestDelete = async (req, res) => {
+    try {
+        const { reason } = req.body;
+        let sale = await Sale.findById(req.params.id);
+
+        if (!sale) {
+            return res.status(404).json({ success: false, message: 'Sale not found' });
+        }
+
+        sale.deleteRequest = {
+            isRequested: true,
+            reason: reason,
+            requestedBy: req.user.id,
+            requestedAt: new Date()
+        };
+
+        await sale.save();
+
+        // Notify Admins
+        const notifyRoles = ['Admin', 'Super Admin', 'Sales Manager'];
+        const User = require('../models/User');
+        User.find({ role: { $in: notifyRoles } }).select('_id').then(users => {
+            const userIds = users.map(u => u._id);
+            const { sendWebPush } = require('../config/webPush');
+            sendWebPush(userIds, {
+                title: 'Deletion Requested',
+                body: `${req.user.name} requested deletion for ${sale.clientName}: ${reason}`,
+                data: { saleId: sale._id.toString() }
+            });
+        });
+
+        const io = req.app.get('io');
+        if (io) {
+            io.emit('sale_updated', { sale, user: req.user.name, type: 'delete_request' });
+        }
+
+        res.status(200).json({ success: true, data: sale });
+    } catch (err) {
+        res.status(400).json({ success: false, message: err.message });
+    }
+};
+
+// @desc    Reject Deletion Request
+// @route   PUT /api/sales/:id/reject-delete
+// @access  Private (Admin, Manager)
+exports.rejectDelete = async (req, res) => {
+    try {
+        let sale = await Sale.findById(req.params.id);
+
+        if (!sale) {
+            return res.status(404).json({ success: false, message: 'Sale not found' });
+        }
+
+        sale.deleteRequest = {
+            isRequested: false,
+            reason: null,
+            requestedBy: null,
+            requestedAt: null
+        };
+
+        await sale.save();
+
+        const io = req.app.get('io');
+        if (io) {
+            io.emit('sale_updated', { sale, user: req.user.name, type: 'delete_rejected' });
+        }
+
+        res.status(200).json({ success: true, data: sale });
+    } catch (err) {
+        res.status(400).json({ success: false, message: err.message });
+    }
+};
+
+// @desc    Delete Sale (Hard Delete)
+// @route   DELETE /api/sales/:id
+// @access  Private (Admin, Manager)
+exports.deleteSale = async (req, res) => {
+    try {
+        let sale = await Sale.findById(req.params.id);
+
+        if (!sale) {
+            return res.status(404).json({ success: false, message: 'Sale not found' });
+        }
+
+        const deletedSaleId = sale._id;
+        const clientName = sale.clientName;
+
+        await sale.deleteOne();
+
+        await AuditLog.create({
+            action: 'DELETE_SALE',
+            performedBy: req.user.id,
+            targetResource: `Sale: ${clientName}`,
+            details: { saleId: deletedSaleId, reason: req.body.reason || 'Direct Deletion' }
+        });
+
+        const io = req.app.get('io');
+        if (io) {
+            io.emit('sale_deleted', { saleId: deletedSaleId, user: req.user.name });
+        }
+
+        res.status(200).json({ success: true, message: 'Sale deleted' });
     } catch (err) {
         res.status(400).json({ success: false, message: err.message });
     }
