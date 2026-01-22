@@ -24,6 +24,7 @@ import AgentPerformanceDetail from './pages/admin/AgentPerformanceDetail';
 import ActiveProjects from './pages/admin/ActiveProjects';
 import BMDashboard from './pages/bm/BMDashboard';
 import BMDiscussions from './pages/bm/BMDiscussions';
+import ProductionDashboard from './pages/production/ProductionDashboard';
 
 function App() {
   return (
@@ -66,8 +67,13 @@ function App() {
             <Route path="/qc/discussions" element={<QCDiscussions />} />
           </Route>
 
+          {/* Production Route */}
+          <Route element={<ProtectedRoute allowedRoles={['Production', 'Admin', 'Super Admin']} />}>
+            <Route path="/production" element={<ProductionDashboard />} />
+          </Route>
+
           {/* Other Protect Routes */}
-          <Route element={<ProtectedRoute allowedRoles={['Super Admin', 'Admin', 'HR', 'Sales Manager', 'Sales Executive', 'Backend Manager', 'Account Manager', 'Backend Team Member', 'QC', 'Client']} />}>
+          <Route element={<ProtectedRoute allowedRoles={['Super Admin', 'Admin', 'HR', 'Sales Manager', 'Sales Executive', 'Backend Manager', 'Account Manager', 'Backend Team Member', 'QC', 'Production', 'Client']} />}>
             <Route path="/dashboard" element={<Dashboard />} />
           </Route>
 

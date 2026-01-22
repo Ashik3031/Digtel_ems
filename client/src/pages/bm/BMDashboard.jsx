@@ -20,7 +20,14 @@ import {
     MdLogout,
     MdDashboard,
     MdHistory,
-    MdMenu
+    MdMenu,
+    MdSchedule,
+    MdBuild,
+    MdAdd,
+    MdEdit,
+    MdDelete,
+    MdClose,
+    MdNotifications
 } from 'react-icons/md';
 
 const BMDashboard = () => {
@@ -38,6 +45,18 @@ const BMDashboard = () => {
 
     const [remarkInput, setRemarkInput] = useState('');
     const [remarkLoading, setRemarkLoading] = useState(false);
+    
+    // Shoot Schedule Modal State
+    const [showShootModal, setShowShootModal] = useState(false);
+    const [selectedProjectForShoot, setSelectedProjectForShoot] = useState(null);
+    const [editingShootId, setEditingShootId] = useState(null);
+    const [shootFormData, setShootFormData] = useState({
+        scheduledDate: '',
+        scheduledTime: '',
+        location: '',
+        notes: ''
+    });
+    const [savingShoot, setSavingShoot] = useState(false);
 
     useEffect(() => {
         fetchProjects();
@@ -183,6 +202,86 @@ const BMDashboard = () => {
             }
         } catch (err) { console.error("Failed to add remark", err); }
         finally { setRemarkLoading(false); }
+    };
+
+    const handleShootScheduleClick = (project) => {
+        setSelectedProjectForShoot(project);
+        setEditingShootId(null);
+        setShootFormData({
+            scheduledDate: '',
+            scheduledTime: '',
+            location: '',
+            notes: ''
+        });
+        setShowShootModal(true);
+    };
+
+    const handleEditShoot = (project, shoot) => {
+        setSelectedProjectForShoot(project);
+        setEditingShootId(shoot._id);
+        setShootFormData({
+            scheduledDate: new Date(shoot.scheduledDate).toISOString().split('T')[0],
+            scheduledTime: shoot.scheduledTime || '',
+            location: shoot.location || '',
+            notes: shoot.notes || ''
+        });
+        setShowShootModal(true);
+    };
+
+    const handleSaveShootSchedule = async () => {
+        if (!selectedProjectForShoot || !shootFormData.scheduledDate) {
+            Swal.fire('Error', 'Please fill in all required fields', 'error');
+            return;
+        }
+        setSavingShoot(true);
+        try {
+            const res = await axios.post(`/api/projects/${selectedProjectForShoot._id}/shoot-schedules`, {
+                ...shootFormData,
+                shootId: editingShootId
+            });
+            if (res.data.success) {
+                setProjects(prev => prev.map(p => p._id === selectedProjectForShoot._id ? res.data.data : p));
+                setShowShootModal(false);
+                Swal.fire('Success', editingShootId ? 'Shoot schedule updated' : 'Shoot scheduled successfully', 'success');
+            }
+        } catch (err) {
+            Swal.fire('Error', err.response?.data?.message || 'Failed to save shoot schedule', 'error');
+        } finally {
+            setSavingShoot(false);
+        }
+    };
+
+    const handleSendReminder = async (projectId, shootId) => {
+        try {
+            const res = await axios.put(`/api/projects/${projectId}/shoot-schedules/${shootId}/remind`);
+            if (res.data.success) {
+                setProjects(prev => prev.map(p => p._id === projectId ? res.data.data : p));
+                Swal.fire('Success', res.data.message, 'success');
+            }
+        } catch (err) {
+            Swal.fire('Error', err.response?.data?.message || 'Failed to send reminder', 'error');
+        }
+    };
+
+    const handleDeleteShoot = async (projectId, shootId) => {
+        const confirm = await Swal.fire({
+            title: 'Delete this shoot?',
+            text: 'This action cannot be undone',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Delete',
+            confirmButtonColor: '#d33'
+        });
+        if (!confirm.isConfirmed) return;
+        try {
+            const res = await axios.delete(`/api/projects/${projectId}/shoot-schedules/${shootId}`);
+            if (res.data.success) {
+                setProjects(prev => prev.map(p => p._id === projectId ? res.data.data : p));
+                Swal.fire('Success', 'Shoot schedule deleted', 'success');
+            }
+        } catch (err) {
+            Swal.fire('Error', 'Failed to delete shoot schedule', 'error');
+        }
     };
 
     const handleLogout = () => {
@@ -508,6 +607,117 @@ const BMDashboard = () => {
                                                                 )}
                                                             </div>
                                                         </div>
+
+                                                        {/* Shoot Schedule Section */}
+                                                        <div className="mt-8 pt-8 border-t border-zinc-200 dark:border-zinc-800">
+                                                            {/* Shoot Schedule */}
+                                                            <div className="bg-white dark:bg-zinc-900 p-5 rounded-xl border border-zinc-200 dark:border-zinc-800">
+                                                                <h4 className="text-sm font-bold text-zinc-400 mb-4 flex items-center gap-2 uppercase tracking-wider">
+                                                                    <MdSchedule className="text-orange-500" /> Shoot Schedules
+                                                                </h4>
+                                                                {project.shootSchedules && project.shootSchedules.length > 0 ? (
+                                                                    <div className="space-y-3 mb-4 max-h-80 overflow-y-auto">
+                                                                        {project.shootSchedules.map((shoot) => (
+                                                                            <div key={shoot._id} className="bg-zinc-50 dark:bg-black/40 p-4 rounded-lg border border-zinc-200 dark:border-zinc-800">
+                                                                                <div className="flex justify-between items-start mb-2">
+                                                                                    <div>
+                                                                                        <p className="text-xs text-zinc-500 mb-1">Date & Time</p>
+                                                                                        <p className="text-lg font-bold text-black dark:text-white">
+                                                                                            {new Date(shoot.scheduledDate).toLocaleDateString('en-IN')} at {shoot.scheduledTime || 'TBD'}
+                                                                                        </p>
+                                                                                    </div>
+                                                                                    <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${
+                                                                                        shoot.status === 'Scheduled' ? 'bg-blue-100 text-blue-700' :
+                                                                                        shoot.status === 'Completed' ? 'bg-emerald-100 text-emerald-700' :
+                                                                                        'bg-red-100 text-red-700'
+                                                                                    }`}>
+                                                                                        {shoot.status}
+                                                                                    </span>
+                                                                                </div>
+                                                                                {shoot.location && (
+                                                                                    <p className="text-xs text-zinc-600 dark:text-zinc-400 mb-2"><span className="font-bold">Location:</span> {shoot.location}</p>
+                                                                                )}
+                                                                                {shoot.notes && (
+                                                                                    <p className="text-xs text-zinc-600 dark:text-zinc-400 mb-2"><span className="font-bold">Notes:</span> {shoot.notes}</p>
+                                                                                )}
+                                                                                {shoot.reminderSent && (
+                                                                                    <p className="text-xs text-blue-600 dark:text-blue-400 mb-2 flex items-center gap-1">
+                                                                                        <MdNotifications className="text-sm" />
+                                                                                        Reminders sent: {shoot.reminderCount || 1}
+                                                                                    </p>
+                                                                                )}
+                                                                                
+                                                                                {/* Equipment Submitted by Production */}
+                                                                                {project.equipment && project.equipment.filter(e => String(e.assignedTo) === String(shoot._id)).length > 0 && (
+                                                                                    <div className="mt-3 pt-3 border-t border-zinc-200 dark:border-zinc-700">
+                                                                                        <p className="text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-2">Equipment in use:</p>
+                                                                                        <div className="space-y-1">
+                                                                                            {project.equipment.filter(e => String(e.assignedTo) === String(shoot._id)).map((equip) => (
+                                                                                                <div key={equip._id} className="flex items-center justify-between text-xs bg-zinc-100 dark:bg-zinc-900 p-2 rounded">
+                                                                                                    <span className="text-zinc-800 dark:text-zinc-200">{equip.name}</span>
+                                                                                                    <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${
+                                                                                        equip.status === 'In Use' ? 'bg-orange-100 text-orange-700' :
+                                                                                        equip.status === 'Available' ? 'bg-emerald-100 text-emerald-700' :
+                                                                                        'bg-slate-100 text-slate-700'
+                                                                                    }`}>
+                                                                                                        {equip.status}
+                                                                                                    </span>
+                                                                                                </div>
+                                                                                            ))}
+                                                                                        </div>
+                                                                                    </div>
+                                                                                )}
+                                                                                
+                                                                                {/* Production Progress */}
+                                                                                {shoot.status === 'Completed' && (
+                                                                                    <div className="mt-3 pt-3 border-t border-zinc-200 dark:border-zinc-700">
+                                                                                        <p className="text-xs font-bold text-zinc-600 dark:text-zinc-400 mb-2">Production Progress:</p>
+                                                                                        <div className="grid grid-cols-2 gap-2 text-xs">
+                                                                                            <div className="bg-emerald-50 dark:bg-emerald-900/20 p-2 rounded">
+                                                                                                <p className="text-emerald-600 dark:text-emerald-400 font-bold">Content Shot</p>
+                                                                                                <p className="text-lg font-bold text-emerald-700 dark:text-emerald-300">{project.contentProduction?.contentShot || 0}</p>
+                                                                                            </div>
+                                                                                            <div className="bg-amber-50 dark:bg-amber-900/20 p-2 rounded">
+                                                                                                <p className="text-amber-600 dark:text-amber-400 font-bold">Pending</p>
+                                                                                                <p className="text-lg font-bold text-amber-700 dark:text-amber-300">{project.contentProduction?.contentPending || 0}</p>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+                                                                                )}
+                                                                                <div className="flex gap-2 mt-3">
+                                                                                    <button
+                                                                                        onClick={() => handleSendReminder(project._id, shoot._id)}
+                                                                                        className="flex-1 bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-xs font-bold transition-colors flex items-center justify-center gap-1"
+                                                                                    >
+                                                                                        <MdNotifications /> Remind
+                                                                                    </button>
+                                                                                    <button
+                                                                                        onClick={() => handleEditShoot(project, shoot)}
+                                                                                        className="flex-1 bg-orange-500 hover:bg-orange-600 text-white px-3 py-1 rounded text-xs font-bold transition-colors"
+                                                                                    >
+                                                                                        Edit
+                                                                                    </button>
+                                                                                    <button
+                                                                                        onClick={() => handleDeleteShoot(project._id, shoot._id)}
+                                                                                        className="flex-1 bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs font-bold transition-colors"
+                                                                                    >
+                                                                                        Delete
+                                                                                    </button>
+                                                                                </div>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                ) : (
+                                                                    <p className="text-zinc-500 dark:text-zinc-600 text-sm italic py-4 text-center">No shoot schedule set yet</p>
+                                                                )}
+                                                                <button
+                                                                    onClick={() => handleShootScheduleClick(project)}
+                                                                    className="w-full bg-orange-500 hover:bg-orange-600 text-white px-4 py-2 rounded-lg font-bold flex items-center justify-center gap-2 transition-colors"
+                                                                >
+                                                                    <MdSchedule /> Add Shoot Schedule
+                                                                </button>
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 )}
                                             </div>
@@ -569,6 +779,80 @@ const BMDashboard = () => {
                     )}
                 </div>
             </div>
+
+            {/* Shoot Schedule Modal */}
+            {showShootModal && selectedProjectForShoot && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-md flex items-center justify-center z-50 p-4">
+                    <div className="bg-white dark:bg-zinc-900 rounded-2xl p-8 w-full max-w-lg shadow-2xl border border-zinc-200 dark:border-zinc-800">
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-2xl font-bold text-black dark:text-white">Schedule Shoot</h2>
+                            <button onClick={() => setShowShootModal(false)} className="text-zinc-400 hover:text-black dark:hover:text-white">
+                                <MdClose className="text-2xl" />
+                            </button>
+                        </div>
+
+                        <div className="space-y-4">
+                            <div>
+                                <label className="block text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-2">Date</label>
+                                <input
+                                    type="date"
+                                    value={shootFormData.scheduledDate}
+                                    onChange={(e) => setShootFormData({ ...shootFormData, scheduledDate: e.target.value })}
+                                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-black border border-zinc-300 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-black dark:text-white"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-2">Time</label>
+                                <input
+                                    type="time"
+                                    value={shootFormData.scheduledTime}
+                                    onChange={(e) => setShootFormData({ ...shootFormData, scheduledTime: e.target.value })}
+                                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-black border border-zinc-300 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-black dark:text-white"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-2">Location</label>
+                                <input
+                                    type="text"
+                                    placeholder="e.g., Studio A, Office, Outdoor"
+                                    value={shootFormData.location}
+                                    onChange={(e) => setShootFormData({ ...shootFormData, location: e.target.value })}
+                                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-black border border-zinc-300 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-black dark:text-white placeholder-zinc-400"
+                                />
+                            </div>
+
+                            <div>
+                                <label className="block text-sm font-bold text-zinc-700 dark:text-zinc-300 mb-2">Notes</label>
+                                <textarea
+                                    placeholder="e.g., Bring 3 crew members, outdoor location, check weather"
+                                    value={shootFormData.notes}
+                                    onChange={(e) => setShootFormData({ ...shootFormData, notes: e.target.value })}
+                                    className="w-full px-4 py-2 bg-zinc-50 dark:bg-black border border-zinc-300 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 text-black dark:text-white placeholder-zinc-400 resize-none h-24"
+                                />
+                            </div>
+
+                            <div className="flex gap-3 mt-6">
+                                <button
+                                    onClick={() => setShowShootModal(false)}
+                                    className="flex-1 px-4 py-3 text-zinc-700 dark:text-zinc-300 bg-zinc-100 dark:bg-zinc-800 hover:bg-zinc-200 dark:hover:bg-zinc-700 rounded-lg font-bold transition-colors"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleSaveShootSchedule}
+                                    disabled={savingShoot}
+                                    className="flex-1 px-4 py-3 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 text-white rounded-lg font-bold transition-colors flex items-center justify-center gap-2"
+                                >
+                                    {savingShoot ? <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div> : <MdSchedule />}
+                                    {savingShoot ? 'Saving...' : editingShootId ? 'Update Shoot' : 'Add Shoot'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

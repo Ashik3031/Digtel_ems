@@ -24,7 +24,8 @@ const Login = () => {
                     'Sales Executive': '/sales',
                     'Account Manager': '/account-manager',
                     'QC': '/qc',
-                    'Backend Manager': '/backend-manager'
+                    'Backend Manager': '/backend-manager',
+                    'Production': '/production'
                 };
                 const targetPath = rolePaths[userData.role] || '/dashboard';
                 navigate(targetPath);

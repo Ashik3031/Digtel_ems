@@ -62,10 +62,9 @@ exports.getActiveProjects = async (req, res) => {
                 // Other details
                 socialLinks: project.socialLinks || [],
                 contentCalendarLink: project.contentCalendarLink,
-                socialLinks: project.socialLinks || [],
-                contentCalendarLink: project.contentCalendarLink,
                 timeline: project.timeline || [],
                 remarks: project.remarks || [],
+                shootSchedules: project.shootSchedules || [],
                 // Original sale details
                 saleDetails: {
                     requirements: sale?.requirements,

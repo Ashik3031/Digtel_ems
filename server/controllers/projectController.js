@@ -326,3 +326,326 @@ exports.toggleStatus = async (req, res) => {
         res.status(400).json({ success: false, message: err.message });
     }
 };
+
+// @desc    Update Content Production Status (Production Team)
+// @route   PUT /api/projects/:id/content-production
+// @access  Private (Production, Admin, Super Admin)
+exports.updateContentProduction = async (req, res) => {
+    try {
+        const { contentShot, contentPending } = req.body;
+
+        let project = await Project.findById(req.params.id);
+        if (!project) return res.status(404).json({ success: false, message: 'Project not found' });
+
+        // Update content production tracking
+        project.contentProduction = {
+            totalContent: (contentShot || 0) + (contentPending || 0),
+            contentShot: contentShot || 0,
+            contentPending: contentPending || 0,
+            lastUpdated: new Date()
+        };
+
+        await project.save();
+
+        // Log action
+        await AuditLog.create({
+            action: 'CONTENT_PRODUCTION_UPDATED',
+            performedBy: req.user.id,
+            targetResource: `Project: ${project.clientName}`,
+            details: { contentShot, contentPending }
+        });
+
+        const io = req.app.get('io');
+        io.emit('project_updated', project);
+
+        res.status(200).json({ success: true, data: project });
+    } catch (err) {
+        res.status(400).json({ success: false, message: err.message });
+    }
+};
+
+// @desc    Add/Update Shoot Schedule
+// @route   POST /api/projects/:id/shoot-schedules
+// @access  Private (Backend Manager, Admin, Super Admin)
+exports.addShootSchedule = async (req, res) => {
+    try {
+        const { scheduledDate, scheduledTime, location, notes, shootId } = req.body;
+
+        let project = await Project.findById(req.params.id);
+        if (!project) return res.status(404).json({ success: false, message: 'Project not found' });
+
+        if (shootId) {
+            // Update existing shoot
+            const shoot = project.shootSchedules.id(shootId);
+            if (!shoot) return res.status(404).json({ success: false, message: 'Shoot not found' });
+            shoot.scheduledDate = scheduledDate ? new Date(scheduledDate) : shoot.scheduledDate;
+            shoot.scheduledTime = scheduledTime || shoot.scheduledTime;
+            shoot.location = location || shoot.location;
+            shoot.notes = notes || shoot.notes;
+            shoot.updatedBy = req.user.id;
+            shoot.updatedAt = new Date();
+        } else {
+            // Add new shoot
+            project.shootSchedules.push({
+                scheduledDate: new Date(scheduledDate),
+                scheduledTime,
+                location,
+                notes,
+                updatedBy: req.user.id
+            });
+        }
+
+        await project.save();
+
+        // Log action
+        await AuditLog.create({
+            action: 'SHOOT_SCHEDULE_ADDED',
+            performedBy: req.user.id,
+            targetResource: `Project: ${project.clientName}`,
+            details: { scheduledDate, scheduledTime, location }
+        });
+
+        const io = req.app.get('io');
+        io.emit('project_updated', project);
+
+        res.status(200).json({ success: true, data: project });
+    } catch (err) {
+        res.status(400).json({ success: false, message: err.message });
+    }
+};
+
+// @desc    Send Reminder for Shoot
+// @route   PUT /api/projects/:id/shoot-schedules/:shootId/remind
+// @access  Private (Backend Manager, Admin, Super Admin)
+exports.remindShootSchedule = async (req, res) => {
+    try {
+        let project = await Project.findById(req.params.id);
+        if (!project) return res.status(404).json({ success: false, message: 'Project not found' });
+
+        const shoot = project.shootSchedules.id(req.params.shootId);
+        if (!shoot) return res.status(404).json({ success: false, message: 'Shoot not found' });
+
+        shoot.reminderSent = true;
+        shoot.reminderSentAt = new Date();
+        shoot.reminderCount = (shoot.reminderCount || 0) + 1;
+        shoot.updatedAt = new Date();
+
+        await project.save();
+
+        // Log action
+        await AuditLog.create({
+            action: 'SHOOT_REMINDER_SENT',
+            performedBy: req.user.id,
+            targetResource: `Project: ${project.clientName}`,
+            details: { scheduledDate: shoot.scheduledDate, scheduledTime: shoot.scheduledTime, reminderCount: shoot.reminderCount }
+        });
+
+        const io = req.app.get('io');
+        io.emit('project_updated', project);
+        io.emit('shoot_reminder', { 
+            projectId: project._id, 
+            clientName: project.clientName, 
+            shootId: shoot._id,
+            scheduledDate: shoot.scheduledDate, 
+            scheduledTime: shoot.scheduledTime,
+            location: shoot.location 
+        });
+
+        res.status(200).json({ success: true, data: project, message: 'Reminder sent to production team' });
+    } catch (err) {
+        res.status(400).json({ success: false, message: err.message });
+    }
+};
+
+// @desc    Mark Shoot as Completed and Return Equipment
+// @route   PUT /api/projects/:id/shoot-schedules/:shootId/complete
+// @access  Private (Backend Manager, Admin, Super Admin)
+exports.completeShootSchedule = async (req, res) => {
+    try {
+        let project = await Project.findById(req.params.id);
+        if (!project) return res.status(404).json({ success: false, message: 'Project not found' });
+
+        const shoot = project.shootSchedules.id(req.params.shootId);
+        if (!shoot) return res.status(404).json({ success: false, message: 'Shoot not found' });
+
+        // Mark shoot as completed
+        shoot.status = 'Completed';
+        shoot.updatedAt = new Date();
+
+        // Return all equipment that was marked as "In Use" for this shoot
+        if (project.equipment) {
+            for (let equip of project.equipment) {
+                if (equip.status === 'In Use' && String(equip.assignedTo) === String(req.params.shootId)) {
+                    equip.status = 'Returned';
+                    equip.returnedDate = new Date();
+                }
+            }
+        }
+
+        await project.save();
+
+        // Log action
+        await AuditLog.create({
+            action: 'SHOOT_COMPLETED',
+            performedBy: req.user.id,
+            targetResource: `Project: ${project.clientName}`,
+            details: { scheduledDate: shoot.scheduledDate, scheduledTime: shoot.scheduledTime }
+        });
+
+        const io = req.app.get('io');
+        io.emit('project_updated', project);
+
+        res.status(200).json({ success: true, data: project, message: 'Shoot marked as completed and equipment returned' });
+    } catch (err) {
+        res.status(400).json({ success: false, message: err.message });
+    }
+};
+
+// @desc    Delete Shoot Schedule
+// @route   DELETE /api/projects/:id/shoot-schedules/:shootId
+// @access  Private (Backend Manager, Admin, Super Admin)
+exports.deleteShootSchedule = async (req, res) => {
+    try {
+        let project = await Project.findById(req.params.id);
+        if (!project) return res.status(404).json({ success: false, message: 'Project not found' });
+
+        const shoot = project.shootSchedules.id(req.params.shootId);
+        if (!shoot) return res.status(404).json({ success: false, message: 'Shoot not found' });
+
+        shoot.deleteOne();
+        await project.save();
+
+        // Log action
+        await AuditLog.create({
+            action: 'SHOOT_SCHEDULE_DELETED',
+            performedBy: req.user.id,
+            targetResource: `Project: ${project.clientName}`,
+            details: { scheduledDate: shoot.scheduledDate }
+        });
+
+        const io = req.app.get('io');
+        io.emit('project_updated', project);
+
+        res.status(200).json({ success: true, data: project });
+    } catch (err) {
+        res.status(400).json({ success: false, message: err.message });
+    }
+};
+
+// @desc    Add Equipment to Project
+// @route   POST /api/projects/:id/equipment
+// @access  Private (Production, Backend Manager, Admin)
+exports.addEquipment = async (req, res) => {
+    try {
+        const { equipmentName, assignedTo } = req.body;
+
+        if (!equipmentName || !assignedTo) {
+            return res.status(400).json({ success: false, message: 'Equipment name and shoot ID are required' });
+        }
+
+        let project = await Project.findById(req.params.id);
+        if (!project) return res.status(404).json({ success: false, message: 'Project not found' });
+
+        // Check if shoot exists
+        const shoot = project.shootSchedules.id(assignedTo);
+        if (!shoot) return res.status(404).json({ success: false, message: 'Shoot schedule not found' });
+
+        // Initialize equipment array if it doesn't exist
+        if (!project.equipment) {
+            project.equipment = [];
+        }
+
+        // Add new equipment
+        project.equipment.push({
+            name: equipmentName,
+            status: 'In Use',
+            assignedTo: assignedTo,
+            takenDate: new Date()
+        });
+
+        await project.save();
+
+        // Log action
+        await AuditLog.create({
+            action: 'EQUIPMENT_ADDED',
+            performedBy: req.user.id,
+            targetResource: `Project: ${project.clientName}`,
+            details: { equipmentName, shootId: assignedTo }
+        });
+
+        const io = req.app.get('io');
+        io.emit('project_updated', project);
+
+        res.status(201).json({ success: true, data: project, message: 'Equipment added successfully' });
+    } catch (err) {
+        res.status(400).json({ success: false, message: err.message });
+    }
+};
+
+// @desc    Update Equipment Status
+// @route   PUT /api/projects/:id/equipment/:equipmentId
+// @access  Private (Production, Backend Manager, Admin)
+exports.updateEquipmentStatus = async (req, res) => {
+    try {
+        const { status } = req.body;
+
+        let project = await Project.findById(req.params.id);
+        if (!project) return res.status(404).json({ success: false, message: 'Project not found' });
+
+        const equipment = project.equipment.id(req.params.equipmentId);
+        if (!equipment) return res.status(404).json({ success: false, message: 'Equipment not found' });
+
+        equipment.status = status || 'Available';
+        if (status === 'Returned') {
+            equipment.returnedDate = new Date();
+        }
+
+        await project.save();
+
+        // Log action
+        await AuditLog.create({
+            action: 'EQUIPMENT_STATUS_UPDATED',
+            performedBy: req.user.id,
+            targetResource: `Project: ${project.clientName}`,
+            details: { equipmentName: equipment.name, status: equipment.status }
+        });
+
+        const io = req.app.get('io');
+        io.emit('project_updated', project);
+
+        res.status(200).json({ success: true, data: project, message: 'Equipment status updated' });
+    } catch (err) {
+        res.status(400).json({ success: false, message: err.message });
+    }
+};
+
+// @desc    Delete Equipment
+// @route   DELETE /api/projects/:id/equipment/:equipmentId
+// @access  Private (Production, Backend Manager, Admin)
+exports.deleteEquipment = async (req, res) => {
+    try {
+        let project = await Project.findById(req.params.id);
+        if (!project) return res.status(404).json({ success: false, message: 'Project not found' });
+
+        const equipment = project.equipment.id(req.params.equipmentId);
+        if (!equipment) return res.status(404).json({ success: false, message: 'Equipment not found' });
+
+        equipment.deleteOne();
+        await project.save();
+
+        // Log action
+        await AuditLog.create({
+            action: 'EQUIPMENT_DELETED',
+            performedBy: req.user.id,
+            targetResource: `Project: ${project.clientName}`,
+            details: { equipmentName: equipment.name }
+        });
+
+        const io = req.app.get('io');
+        io.emit('project_updated', project);
+
+        res.status(200).json({ success: true, data: project, message: 'Equipment deleted' });
+    } catch (err) {
+        res.status(400).json({ success: false, message: err.message });
+    }
+};
