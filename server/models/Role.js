@@ -18,4 +18,10 @@ const RoleSchema = new mongoose.Schema({
     timestamps: true
 });
 
+const PerformanceMarketing = 'Performance Marketing';
+
 module.exports = mongoose.model('Role', RoleSchema);
+
+roles: {
+    PerformanceMarketing,
+},

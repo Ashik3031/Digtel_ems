@@ -36,6 +36,7 @@ const UserSchema = new mongoose.Schema({
             'Backend Team Member',
             'QC',
             'Production',
+            'Performance Marketing',
             'Client'
         ],
         default: 'Client'

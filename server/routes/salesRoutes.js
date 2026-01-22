@@ -18,6 +18,7 @@ const {
     deleteSale
 } = require('../controllers/salesController');
 const { protect, authorize } = require('../middleware/authMiddleware');
+const performanceMarketingController = require('../controllers/performanceMarketingController');
 
 const router = express.Router();
 
@@ -28,6 +29,9 @@ router.get('/manager/stats', authorize('Sales Manager', 'Admin', 'Super Admin'),
 
 // Target Stats (Self/Admin)
 router.get('/target-stats', authorize('Sales Executive', 'Admin', 'Super Admin'), getTargetStats);
+
+// Performance Marketing Dashboard
+router.get('/performance-marketing', authorize('Sales Manager', 'Admin', 'Super Admin'), performanceMarketingController.getDashboard);
 
 // Get All / Create (Sales + Admins)
 router.route('/')

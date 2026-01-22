@@ -73,7 +73,7 @@ function App() {
           </Route>
 
           {/* Other Protect Routes */}
-          <Route element={<ProtectedRoute allowedRoles={['Super Admin', 'Admin', 'HR', 'Sales Manager', 'Sales Executive', 'Backend Manager', 'Account Manager', 'Backend Team Member', 'QC', 'Production', 'Client']} />}>
+          <Route element={<ProtectedRoute allowedRoles={['Super Admin', 'Admin', 'HR', 'Sales Manager', 'Sales Executive', 'Backend Manager', 'Account Manager', 'Backend Team Member', 'QC', 'Production', 'Performance Marketing', 'Client']} />}>
             <Route path="/dashboard" element={<Dashboard />} />
           </Route>
 

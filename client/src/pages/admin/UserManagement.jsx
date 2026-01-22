@@ -23,7 +23,7 @@ const UserManagement = () => {
 
     const roles = [
         'Super Admin', 'Admin', 'Sales Manager', 'Sales Executive',
-        'Backend Manager', 'Account Manager', 'Backend Team Member', 'QC', 'Production'
+        'Backend Manager', 'Account Manager', 'Backend Team Member', 'QC', 'Production', 'Performance Marketing'
     ];
 
     useEffect(() => {
