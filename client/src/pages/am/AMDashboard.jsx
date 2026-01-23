@@ -183,6 +183,20 @@ const AMDashboard = () => {
                             Discussions
                         </button>
 
+                        <button
+                            onClick={() => navigate('/account-manager/meta-ad-requests')}
+                            className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 py-2 rounded-lg transition-all shadow-md text-sm"
+                        >
+                            Meta Ad Requests
+                        </button>
+
+                        <button
+                            onClick={() => navigate('/account-manager/ad-reports')}
+                            className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-lg transition-all shadow-md text-sm"
+                        >
+                            Ad Reports
+                        </button>
+
                         <button onClick={handleLogout} className="bg-white dark:bg-black text-red-600 border border-red-200 dark:border-red-900/30 px-4 py-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors text-sm">
                             Logout
                         </button>

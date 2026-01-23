@@ -25,6 +25,11 @@ import ActiveProjects from './pages/admin/ActiveProjects';
 import BMDashboard from './pages/bm/BMDashboard';
 import BMDiscussions from './pages/bm/BMDiscussions';
 import ProductionDashboard from './pages/production/ProductionDashboard';
+import PerformanceMarketingDashboard from './pages/pm/PerformanceMarketingDashboard';
+import PerformanceMarketingDiscussions from './pages/pm/PerformanceMarketingDiscussions';
+import PMRequestManagementPage from './pages/pm/PMRequestManagementPage';
+import MetaAdRequestPage from './pages/am/MetaAdRequestPage';
+import AdReportsPage from './pages/admin/AdReportsPage';
 
 function App() {
   return (
@@ -44,7 +49,8 @@ function App() {
           {/* Account Manager Module */}
           <Route element={<ProtectedRoute allowedRoles={['Account Manager', 'Admin', 'Super Admin']} />}>
             <Route path="/account-manager" element={<AMDashboard />} />
-            <Route path="/account-manager/discussions" element={<AMDiscussions />} />
+            <Route path="/account-manager/meta-ad-requests" element={<MetaAdRequestPage />} />
+            <Route path="/account-manager/ad-reports" element={<AdReportsPage />} />
           </Route>
 
           {/* Admin Module */}
@@ -58,6 +64,7 @@ function App() {
             <Route path="logs" element={<AuditLogViewer />} />
             <Route path="projects" element={<ActiveProjects />} />
             <Route path="discussions" element={<AdminDiscussions />} />
+            <Route path="ad-reports" element={<AdReportsPage />} />
             <Route path="sales-view" element={<SalesDashboard isEmbedded={true} />} />
           </Route>
 
@@ -72,6 +79,13 @@ function App() {
             <Route path="/production" element={<ProductionDashboard />} />
           </Route>
 
+          {/* Performance Marketing Route */}
+          <Route element={<ProtectedRoute allowedRoles={['Performance Marketing', 'Admin', 'Super Admin']} />}>
+            <Route path="/performance-marketing" element={<PerformanceMarketingDashboard />} />
+            <Route path="/performance-marketing/requests" element={<PMRequestManagementPage />} />
+            <Route path="/performance-marketing/discussions" element={<PerformanceMarketingDiscussions />} />
+          </Route>
+
           {/* Other Protect Routes */}
           <Route element={<ProtectedRoute allowedRoles={['Super Admin', 'Admin', 'HR', 'Sales Manager', 'Sales Executive', 'Backend Manager', 'Account Manager', 'Backend Team Member', 'QC', 'Production', 'Performance Marketing', 'Client']} />}>
             <Route path="/dashboard" element={<Dashboard />} />
@@ -80,6 +94,7 @@ function App() {
           <Route element={<ProtectedRoute allowedRoles={['Backend Manager', 'Admin', 'Super Admin']} />}>
             <Route path="/backend-manager" element={<BMDashboard />} />
             <Route path="/backend-manager/discussions" element={<BMDiscussions />} />
+            <Route path="/backend-manager/ad-reports" element={<AdReportsPage />} />
           </Route>
 
           <Route element={<ProtectedRoute allowedRoles={['Backend Team Member']} />}>

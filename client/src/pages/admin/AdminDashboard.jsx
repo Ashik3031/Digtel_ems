@@ -194,6 +194,12 @@ const AdminDashboard = () => {
                     >
                         <MdComment className="text-lg" /> Project Discussions
                     </button>
+                    <button
+                        onClick={() => navigate('/admin/ad-reports')}
+                        className="flex items-center gap-2 bg-purple-600 dark:bg-purple-700 text-white px-4 py-3 rounded-xl font-bold hover:opacity-90 transition-all text-sm shadow-lg"
+                    >
+                        <MdAssignment className="text-lg" /> Ad Reports
+                    </button>
                     {/* Notification Bell */}
                     <button
                         onClick={() => setShowNotificationPanel(!showNotificationPanel)}

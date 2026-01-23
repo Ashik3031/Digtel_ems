@@ -27,7 +27,8 @@ import {
     MdEdit,
     MdDelete,
     MdClose,
-    MdNotifications
+    MdNotifications,
+    MdCampaign
 } from 'react-icons/md';
 
 const BMDashboard = () => {
@@ -45,7 +46,7 @@ const BMDashboard = () => {
 
     const [remarkInput, setRemarkInput] = useState('');
     const [remarkLoading, setRemarkLoading] = useState(false);
-    
+
     // Shoot Schedule Modal State
     const [showShootModal, setShowShootModal] = useState(false);
     const [selectedProjectForShoot, setSelectedProjectForShoot] = useState(null);
@@ -344,6 +345,9 @@ const BMDashboard = () => {
                     <button onClick={() => navigate('/backend-manager/discussions')} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-zinc-500 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-black dark:hover:text-white">
                         <MdComment className="text-xl text-[#D8F60D]" /> Project Discussions
                     </button>
+                    <button onClick={() => navigate('/backend-manager/ad-reports')} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all font-bold text-zinc-500 dark:text-zinc-400 hover:bg-zinc-200 dark:hover:bg-zinc-800 hover:text-black dark:hover:text-white">
+                        <MdCampaign className="text-xl text-[#D8F60D]" /> Ad Reports
+                    </button>
                 </nav>
                 <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-zinc-200 dark:border-zinc-800">
                     <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-zinc-500 hover:bg-red-500/10 hover:text-red-500 transition-all font-bold">
@@ -626,11 +630,10 @@ const BMDashboard = () => {
                                                                                             {new Date(shoot.scheduledDate).toLocaleDateString('en-IN')} at {shoot.scheduledTime || 'TBD'}
                                                                                         </p>
                                                                                     </div>
-                                                                                    <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${
-                                                                                        shoot.status === 'Scheduled' ? 'bg-blue-100 text-blue-700' :
+                                                                                    <span className={`px-2 py-1 rounded-full text-[10px] font-bold uppercase ${shoot.status === 'Scheduled' ? 'bg-blue-100 text-blue-700' :
                                                                                         shoot.status === 'Completed' ? 'bg-emerald-100 text-emerald-700' :
-                                                                                        'bg-red-100 text-red-700'
-                                                                                    }`}>
+                                                                                            'bg-red-100 text-red-700'
+                                                                                        }`}>
                                                                                         {shoot.status}
                                                                                     </span>
                                                                                 </div>
@@ -646,7 +649,7 @@ const BMDashboard = () => {
                                                                                         Reminders sent: {shoot.reminderCount || 1}
                                                                                     </p>
                                                                                 )}
-                                                                                
+
                                                                                 {/* Equipment Submitted by Production */}
                                                                                 {project.equipment && project.equipment.filter(e => String(e.assignedTo) === String(shoot._id)).length > 0 && (
                                                                                     <div className="mt-3 pt-3 border-t border-zinc-200 dark:border-zinc-700">
@@ -655,11 +658,10 @@ const BMDashboard = () => {
                                                                                             {project.equipment.filter(e => String(e.assignedTo) === String(shoot._id)).map((equip) => (
                                                                                                 <div key={equip._id} className="flex items-center justify-between text-xs bg-zinc-100 dark:bg-zinc-900 p-2 rounded">
                                                                                                     <span className="text-zinc-800 dark:text-zinc-200">{equip.name}</span>
-                                                                                                    <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${
-                                                                                        equip.status === 'In Use' ? 'bg-orange-100 text-orange-700' :
-                                                                                        equip.status === 'Available' ? 'bg-emerald-100 text-emerald-700' :
-                                                                                        'bg-slate-100 text-slate-700'
-                                                                                    }`}>
+                                                                                                    <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${equip.status === 'In Use' ? 'bg-orange-100 text-orange-700' :
+                                                                                                        equip.status === 'Available' ? 'bg-emerald-100 text-emerald-700' :
+                                                                                                            'bg-slate-100 text-slate-700'
+                                                                                                        }`}>
                                                                                                         {equip.status}
                                                                                                     </span>
                                                                                                 </div>
@@ -667,7 +669,7 @@ const BMDashboard = () => {
                                                                                         </div>
                                                                                     </div>
                                                                                 )}
-                                                                                
+
                                                                                 {/* Production Progress */}
                                                                                 {shoot.status === 'Completed' && (
                                                                                     <div className="mt-3 pt-3 border-t border-zinc-200 dark:border-zinc-700">

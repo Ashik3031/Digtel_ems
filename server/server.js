@@ -97,6 +97,7 @@ app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/sales', require('./routes/salesRoutes'));
 app.use('/api/projects', require('./routes/projectRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
+app.use('/api/meta-ad', require('./routes/metaAdRoutes'));
 
 app.get('/', (req, res) => res.send('API is running...'));
 
